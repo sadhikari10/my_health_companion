@@ -28,31 +28,37 @@ class _SignInPageState extends State<SignInPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Sign In")),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.lightBlue.shade100, Colors.blue.shade200],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TextField(controller: _emailController, decoration: InputDecoration(labelText: "Email")),
-                TextField(controller: _passwordController, decoration: InputDecoration(labelText: "Password"), obscureText: true),
-                SizedBox(height: 20),
-                ElevatedButton(onPressed: _signIn, child: Text("Sign In")),
-                TextButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => SignUpPage())), child: Text("New User? Sign Up")),
-                SizedBox(height: 40),
-                Text("Thriving Health, Vibrant Life Every Day", style: TextStyle(fontStyle: FontStyle.italic, color: Colors.blueGrey)),
-              ],
+      body: Stack(
+        children: [
+          // Background Image
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.5, // Set the opacity to 50%
+              child: Image.asset(
+                'assets/bg_image.jpg', // Replace with your image path
+                fit: BoxFit.cover, // Cover the whole screen with the image
+              ),
             ),
           ),
-        ),
+          // Foreground content
+          Center(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextField(controller: _emailController, decoration: InputDecoration(labelText: "Email")),
+                  TextField(controller: _passwordController, decoration: InputDecoration(labelText: "Password"), obscureText: true),
+                  SizedBox(height: 20),
+                  ElevatedButton(onPressed: _signIn, child: Text("Sign In")),
+                  TextButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => SignUpPage())), child: Text("New User? Sign Up")),
+                  SizedBox(height: 40),
+                  Text("Thriving Health, Vibrant Life Every Day", style: TextStyle(fontStyle: FontStyle.italic, color: Colors.blueGrey)),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
