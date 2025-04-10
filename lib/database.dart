@@ -16,30 +16,50 @@ class DatabaseHelper {
   Future<Database> _initDB(String filePath) async {
     final dbPath = await getDatabasesPath();
     final path = p.join(dbPath, filePath);
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return await openDatabase(
+      path,
+      version: 2, // bumped version to support migration
+      onCreate: _createDB,
+      onUpgrade: _onUpgrade,
+    );
   }
 
   Future _createDB(Database db, int version) async {
-    await db.execute(''' 
+    await db.execute('''
       CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         first_name TEXT NOT NULL,
         last_name TEXT NOT NULL,
         email TEXT NOT NULL UNIQUE,
         contact_no TEXT NOT NULL,
-        password TEXT NOT NULL
+        password TEXT NOT NULL,
+        profile_image TEXT
       )
     ''');
   }
 
-  Future<int> createUser(String firstName, String lastName, String email, String contactNo, String password) async {
+  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE users ADD COLUMN profile_image TEXT');
+    }
+  }
+
+  Future<int> createUser(
+    String firstName,
+    String lastName,
+    String email,
+    String contactNo,
+    String password,
+    String? profileImagePath,
+  ) async {
     final db = await database;
     return await db.insert('users', {
       'first_name': firstName,
       'last_name': lastName,
       'email': email,
       'contact_no': contactNo,
-      'password': password
+      'password': password,
+      'profile_image': profileImagePath
     });
   }
 

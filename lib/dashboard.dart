@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'signin_page.dart';
 import 'information_storage.dart';
@@ -13,8 +14,28 @@ class DashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String? profileImagePath = user['profile_image'];
+
     return Scaffold(
-      appBar: AppBar(title: Text("Welcome, ${user['first_name']}!")),
+      appBar: AppBar(
+        title: Row(
+          children: [
+            if (profileImagePath != null && File(profileImagePath).existsSync())
+              CircleAvatar(
+                backgroundImage: FileImage(File(profileImagePath)),
+                radius: 20,
+              )
+            else
+              CircleAvatar(
+                backgroundColor: Colors.grey[300],
+                radius: 20,
+                child: Icon(Icons.person, color: Colors.grey[700]),
+              ),
+            SizedBox(width: 12),
+            Text("Welcome, ${user['first_name']}!"),
+          ],
+        ),
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
