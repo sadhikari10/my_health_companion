@@ -6,6 +6,7 @@ import 'medication_reminder.dart';
 import 'log_medication.dart';
 import 'health_guidance.dart';
 import 'appointment_tracking.dart';
+import 'change_information.dart';  
 
 class DashboardPage extends StatelessWidget {
   final Map<String, dynamic> user;
@@ -20,17 +21,23 @@ class DashboardPage extends StatelessWidget {
       appBar: AppBar(
         title: Row(
           children: [
-            if (profileImagePath != null && File(profileImagePath).existsSync())
-              CircleAvatar(
-                backgroundImage: FileImage(File(profileImagePath)),
+            InkWell(
+              onTap: () {
+                // Navigate to Change Information page when the user icon is tapped
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ChangeInformationPage(userId: user['id'])),
+                );
+              },
+              child: CircleAvatar(
+                backgroundImage: profileImagePath != null && File(profileImagePath).existsSync()
+                    ? FileImage(File(profileImagePath))
+                    : null,
+                backgroundColor: profileImagePath == null ? Colors.grey[300] : null,
                 radius: 20,
-              )
-            else
-              CircleAvatar(
-                backgroundColor: Colors.grey[300],
-                radius: 20,
-                child: Icon(Icons.person, color: Colors.grey[700]),
+                child: profileImagePath == null ? Icon(Icons.person, color: Colors.grey[700]) : null,
               ),
+            ),
             SizedBox(width: 12),
             Text("Welcome, ${user['first_name']}!"),
           ],

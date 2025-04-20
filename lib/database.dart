@@ -25,7 +25,7 @@ class DatabaseHelper {
   }
 
   Future _createDB(Database db, int version) async {
-    await db.execute('''
+    await db.execute(''' 
       CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         first_name TEXT NOT NULL,
@@ -44,6 +44,7 @@ class DatabaseHelper {
     }
   }
 
+  //  function to create a user
   Future<int> createUser(
     String firstName,
     String lastName,
@@ -63,9 +64,47 @@ class DatabaseHelper {
     });
   }
 
+  //  function to get a user by email
   Future<Map<String, dynamic>?> getUser(String email) async {
     final db = await database;
     final res = await db.query('users', where: 'email = ?', whereArgs: [email]);
     return res.isNotEmpty ? res.first : null;
+  }
+
+  // function to get a user by id
+  Future<Map<String, dynamic>?> getUserById(int id) async {
+    final db = await database;
+    final results = await db.query(
+      'users',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    return results.isNotEmpty ? results.first : null;
+  }
+
+  // function to update user information by id
+  Future<int> updateUser(
+    int id,
+    String firstName,
+    String lastName,
+    String email,
+    String contactNo,
+    String password,
+    String? profileImagePath,
+  ) async {
+    final db = await database;
+    return await db.update(
+      'users',
+      {
+        'first_name': firstName,
+        'last_name': lastName,
+        'email': email,
+        'contact_no': contactNo,
+        'password': password,
+        'profile_image': profileImagePath,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 }
