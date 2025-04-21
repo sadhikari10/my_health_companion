@@ -6,12 +6,36 @@ import 'medication_reminder.dart';
 import 'log_medication.dart';
 import 'health_guidance.dart';
 import 'appointment_tracking.dart';
-import 'change_information.dart';  
+import 'change_information.dart';
+import 'database.dart'; // Required to fetch updated user
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   final Map<String, dynamic> user;
 
   DashboardPage({required this.user});
+
+  @override
+  _DashboardPageState createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  late Map<String, dynamic> user;
+
+  @override
+  void initState() {
+    super.initState();
+    user = widget.user;
+  }
+
+  // Fetch updated user info by ID
+  Future<void> _refreshUser() async {
+    final updatedUser = await DatabaseHelper.instance.getUserById(user['id']);
+    if (updatedUser != null) {
+      setState(() {
+        user = updatedUser;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,12 +46,19 @@ class DashboardPage extends StatelessWidget {
         title: Row(
           children: [
             InkWell(
-              onTap: () {
-                // Navigate to Change Information page when the user icon is tapped
-                Navigator.push(
+              onTap: () async {
+                // Navigate to ChangeInformationPage with userId
+                final result = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => ChangeInformationPage(userId: user['id'])),
+                  MaterialPageRoute(
+                    builder: (context) => ChangeInformationPage(userId: user['id']),
+                  ),
                 );
+
+                // Refresh user info if changes were made
+                if (result != null) {
+                  await _refreshUser();
+                }
               },
               child: CircleAvatar(
                 backgroundImage: profileImagePath != null && File(profileImagePath).existsSync()
@@ -35,7 +66,9 @@ class DashboardPage extends StatelessWidget {
                     : null,
                 backgroundColor: profileImagePath == null ? Colors.grey[300] : null,
                 radius: 20,
-                child: profileImagePath == null ? Icon(Icons.person, color: Colors.grey[700]) : null,
+                child: profileImagePath == null
+                    ? Icon(Icons.person, color: Colors.grey[700])
+                    : null,
               ),
             ),
             SizedBox(width: 12),

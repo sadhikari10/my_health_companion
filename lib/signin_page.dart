@@ -12,6 +12,8 @@ class _SignInPageState extends State<SignInPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  bool _passwordVisible = false;
+
  Future<void> _signIn() async {
   String email = _emailController.text.trim();
   String password = _passwordController.text;
@@ -91,10 +93,20 @@ Widget build(BuildContext context) {
                   ),
                   child: TextField(
                     controller: _passwordController,
-                    obscureText: true,
+                    obscureText: !_passwordVisible,
                     decoration: InputDecoration(
                       labelText: "Password",
                       border: InputBorder.none,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                        ),
+                        onPressed:() {
+                          setState(() {
+                            _passwordVisible =!_passwordVisible; 
+                          });
+                        },
+                      ),
                     ),
                   ),
                 ),

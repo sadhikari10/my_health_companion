@@ -17,6 +17,8 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _contactController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _agreedToTnC = false;
+
+  bool _passwordVisible = false;
   File? _profileImage;
 
   Future<void> _pickImage() async {
@@ -122,8 +124,6 @@ Widget build(BuildContext context) {
     appBar: AppBar(title: Text("Sign Up")),
     body: Padding(
       padding: EdgeInsets.all(16.0),
-      child: Padding(
-        padding: EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -196,7 +196,16 @@ Widget build(BuildContext context) {
                       },
                     ),
                     Expanded(
-                      child: Text("I Agree to Terms and Conditions"),
+                      child: GestureDetector(
+                        onTap: () => _showTermsandConditions(context),
+                        child: Text(
+                          "I Agree to Terms and Conditions",
+                          style: TextStyle(
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
                       ),
                   ],
                 ),
@@ -216,17 +225,17 @@ Widget build(BuildContext context) {
               SizedBox(height: 20),
 
               Text(
-  "Already have an account?",
-  textAlign: TextAlign.center,
-  style: TextStyle(color: Colors.black87),
-),
-SizedBox(height: 8),
-ElevatedButton(
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => SignInPage()),
-    );
+          "Already have an account?",
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.black87),
+            ),
+        SizedBox(height: 8),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SignInPage()),
+            );
   },
   child: Text("Sign In"),
 ),
@@ -234,12 +243,12 @@ ElevatedButton(
           ),
         ),
       ),
-    ),
-  );
+    );
 }
 
 
 Widget _buildTextBox(TextEditingController controller, String label, {bool obscureText = false}) {
+  bool isPasswordField = label.toLowerCase() == "password";
   return Container(
     margin: EdgeInsets.symmetric(horizontal: 20),
     padding: EdgeInsets.symmetric(horizontal: 12),
@@ -250,10 +259,22 @@ Widget _buildTextBox(TextEditingController controller, String label, {bool obscu
     ),
     child: TextField(
       controller: controller,
-      obscureText: obscureText,
+      obscureText: isPasswordField ? !_passwordVisible : obscureText,
       decoration: InputDecoration(
         labelText: label,
         border: InputBorder.none,
+        suffixIcon: isPasswordField 
+        ? IconButton(
+          icon: Icon(
+            _passwordVisible ? Icons.visibility: Icons.visibility_off,
+          ),
+          onPressed:(){
+            setState((){
+              _passwordVisible = !_passwordVisible;
+            });
+          },
+          )
+          :null,
       ),
     ),
   );
@@ -263,4 +284,37 @@ void _showMessage(String message) {
     SnackBar(content: Text(message)),
   );
 }
+
+
+}void _showTermsandConditions(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text("Terms and Conditions"),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("1. You agree not to misuse the app."),
+              SizedBox(height: 8),
+              Text("2. The app stores your personal information"),
+              SizedBox(height: 8),
+              Text("3. Your password will be encrypted and only known to you."),
+              SizedBox(height: 8),
+              Text("4. This app is meant for personal health tracking, so your disease information will be stored in the app's database."),
+              SizedBox(height: 8),
+              Text("5. By using this app, you consent to the terms mentioned above."),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            child: Text("Close"),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      );
+    },
+  );
 }

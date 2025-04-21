@@ -91,6 +91,7 @@ class _ChangeInformationPageState extends State<ChangeInformationPage> {
     // Show a success message
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Information updated successfully")));
   
+  Navigator.pop(context, updatedUser);
   //Navigator.pop(context, 'User details updated successfully');
   }
 
