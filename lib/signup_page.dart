@@ -16,7 +16,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _contactController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
+  bool _agreedToTnC = false;
   File? _profileImage;
 
   Future<void> _pickImage() async {
@@ -48,6 +48,11 @@ class _SignUpPageState extends State<SignUpPage> {
     return;
   } else if (emptyFields.length == 1) {
     _showMessage("${emptyFields[0]} cannot be empty");
+    return;
+  }
+  if(!_agreedToTnC)
+  {
+    _showMessage("Please agree to the Terms and Conditions.");
     return;
   }
 
@@ -115,7 +120,8 @@ class _SignUpPageState extends State<SignUpPage> {
 Widget build(BuildContext context) {
   return Scaffold(
     appBar: AppBar(title: Text("Sign Up")),
-    body: Center(
+    body: Padding(
+      padding: EdgeInsets.all(16.0),
       child: Padding(
         padding: EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -175,7 +181,26 @@ Widget build(BuildContext context) {
                   ],
                 ),
               ),
-              SizedBox(height: 24),
+              SizedBox(height: 16),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal:20),
+                child: Row(
+                  children:[
+                    Checkbox(
+                      value: 
+                      _agreedToTnC,
+                      onChanged: (value) {
+                        setState(() {
+                          _agreedToTnC = value ?? false;
+                        });
+                      },
+                    ),
+                    Expanded(
+                      child: Text("I Agree to Terms and Conditions"),
+                      ),
+                  ],
+                ),
+                ),
 
               // Sign Up Button
               SizedBox(

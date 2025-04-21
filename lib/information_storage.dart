@@ -1,5 +1,7 @@
+
 import 'package:flutter/material.dart';
 import 'dashboard.dart';
+import 'database.dart'; 
 
 class InformationStoragePage extends StatefulWidget {
   @override
@@ -13,10 +15,32 @@ class _InformationStoragePageState extends State<InformationStoragePage> {
   DateTime? _startDate;
   DateTime? _endDate;
   String? _selectedDisease;
+  final TextEditingController _customDiseaseController = TextEditingController();
+  bool _isOtherDisease = false;
 
-  final List<String> _diseaseList = [
-    "Diabetes", "Hypertension", "Asthma", "Heart Disease", "Migraine", "Other"
-  ];
+  List<String> _diseaseList = []; // Initially empty
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDiseasesFromDB(); // Load diseases on init
+  }
+
+  Future<void> _loadDiseasesFromDB() async {
+  final dbHelper = DatabaseHelper.instance;
+  final db = await dbHelper.database;
+
+  final existingDiseases = await db.query('diseases');
+  if (existingDiseases.isEmpty) {
+    await dbHelper.insertPredefinedDiseases(); // Step that ensures data is inserted
+  }
+
+  final updatedDiseases = await db.query('diseases');
+  setState(() {
+    _diseaseList = updatedDiseases.map((d) => d['name'].toString()).toList();
+    _diseaseList.add("Other");
+  });
+}
 
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
     DateTime? picked = await showDatePicker(
@@ -60,7 +84,13 @@ class _InformationStoragePageState extends State<InformationStoragePage> {
                       Text("Disease Name"),
                       DropdownButtonFormField<String>(
                         value: _selectedDisease,
-                        onChanged: (value) => setState(() => _selectedDisease = value),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedDisease = value;
+                            _isOtherDisease = value == "Other";
+                          }
+                          );
+                        },
                         items: _diseaseList.map((disease) {
                           return DropdownMenuItem(
                             value: disease,
@@ -68,6 +98,17 @@ class _InformationStoragePageState extends State<InformationStoragePage> {
                           );
                         }).toList(),
                         decoration: InputDecoration(border: OutlineInputBorder()),
+                      ),
+                      if(_isOtherDisease)
+                      Padding(
+                        padding: const EdgeInsets.only(top:10),
+                        child: TextField(
+                          controller: _customDiseaseController,
+                          decoration: InputDecoration(
+                            labelText: "Enter Disease Name",
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
                       ),
                       SizedBox(height: 10),
                       TextField(
@@ -83,13 +124,17 @@ class _InformationStoragePageState extends State<InformationStoragePage> {
                       Text("Start Date"),
                       ElevatedButton(
                         onPressed: () => _selectDate(context, true),
-                        child: Text(_startDate == null ? "Select Start Date" : _startDate!.toLocal().toString().split(' ')[0]),
+                        child: Text(_startDate == null
+                            ? "Select Start Date"
+                            : _startDate!.toLocal().toString().split(' ')[0]),
                       ),
                       SizedBox(height: 10),
                       Text("End Date"),
                       ElevatedButton(
                         onPressed: () => _selectDate(context, false),
-                        child: Text(_endDate == null ? "Select End Date" : _endDate!.toLocal().toString().split(' ')[0]),
+                        child: Text(_endDate == null
+                            ? "Select End Date"
+                            : _endDate!.toLocal().toString().split(' ')[0]),
                       ),
                       SizedBox(height: 10),
                       TextField(
@@ -99,7 +144,7 @@ class _InformationStoragePageState extends State<InformationStoragePage> {
                       SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: () {
-                          // Save information logic here
+                          // Saving information logic here
                         },
                         child: Text("Save"),
                       ),
