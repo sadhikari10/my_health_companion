@@ -1,13 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'signin_page.dart';
-import 'information_storage.dart';
 import 'medication_reminder.dart';
 import 'log_medication.dart';
 import 'health_guidance.dart';
 import 'appointment_tracking.dart';
 import 'change_information.dart';
-import 'database.dart'; // Required to fetch updated user
+import 'database.dart ' as db; 
+import 'information_list.dart';
 
 class DashboardPage extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -27,9 +27,8 @@ class _DashboardPageState extends State<DashboardPage> {
     user = widget.user;
   }
 
-  // Fetch updated user info by ID
   Future<void> _refreshUser() async {
-    final updatedUser = await DatabaseHelper.instance.getUserById(user['id']);
+    final updatedUser = await db.DatabaseHelper.instance.getUserById(user['id']);
     if (updatedUser != null) {
       setState(() {
         user = updatedUser;
@@ -47,15 +46,12 @@ class _DashboardPageState extends State<DashboardPage> {
           children: [
             InkWell(
               onTap: () async {
-                // Navigate to ChangeInformationPage with userId
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => ChangeInformationPage(userId: user['id']),
                   ),
                 );
-
-                // Refresh user info if changes were made
                 if (result != null) {
                   await _refreshUser();
                 }
@@ -90,7 +86,7 @@ class _DashboardPageState extends State<DashboardPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildButton(context, "Information Storage", InformationStoragePage()),
+                _buildButton(context, "Information Storage", InformationListPage(userEmail: user['email'])),
                 _buildButton(context, "Medication Reminder System", MedicationReminderPage()),
                 _buildButton(context, "Log Medication Intake", LogMedicationPage()),
                 _buildButton(context, "Health Guidance", HealthGuidancePage()),
