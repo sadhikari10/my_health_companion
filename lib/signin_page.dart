@@ -14,6 +14,13 @@ class _SignInPageState extends State<SignInPage> {
 
   bool _passwordVisible = false;
 
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
  Future<void> _signIn() async {
   String email = _emailController.text.trim();
   String password = _passwordController.text;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:my_health_companion/database.dart';
-import 'package:intl/intl.dart'; 
 
 class InformationStoragePage extends StatefulWidget {
   final String userEmail;
@@ -28,13 +28,22 @@ class _InformationStoragePageState extends State<InformationStoragePage> {
     _loadUserAndDiseases();
   }
 
+  @override
+  void dispose() {
+    _customDiseaseController.dispose();
+    _medicationNameController.dispose();
+    _dosageController.dispose();
+    _startDateController.dispose();
+    _endDateController.dispose();
+    _prescriberController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadUserAndDiseases() async {
     try {
       final user = await DatabaseHelper.instance.getUser(widget.userEmail);
       if (user != null) {
-        setState(() {
-          _userId = user['id'];
-        });
+        _userId = user['id'];
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Failed to load user info")),
@@ -56,7 +65,7 @@ class _InformationStoragePageState extends State<InformationStoragePage> {
     }
   }
 
-  Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
+  Future<void> _selectDate(TextEditingController controller) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -64,8 +73,38 @@ class _InformationStoragePageState extends State<InformationStoragePage> {
       lastDate: DateTime(2100),
     );
     if (picked != null) {
-      final formattedDate = DateFormat('yyyy-MM-dd').format(picked);
-      controller.text = formattedDate;
+      controller.text = DateFormat('yyyy-MM-dd').format(picked);
+    }
+  }
+
+  Widget _buildDatePicker(String label, TextEditingController controller) {
+    return TextField(
+      controller: controller,
+      readOnly: true,
+      decoration: InputDecoration(
+        labelText: label,
+        suffixIcon: Icon(Icons.calendar_today),
+        border: OutlineInputBorder(),
+      ),
+      onTap: () => _selectDate(controller),
+    );
+  }
+
+  Future<void> _confirmAndSave() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text("Confirm Save"),
+        content: Text("Are you sure you want to save this information?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text("Cancel")),
+          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: Text("Save")),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      _saveInformation();
     }
   }
 
@@ -78,7 +117,6 @@ class _InformationStoragePageState extends State<InformationStoragePage> {
     }
 
     String? diseaseToSave = _selectedDisease;
-
     if (_selectedDisease == 'Other') {
       if (_customDiseaseController.text.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -119,7 +157,7 @@ class _InformationStoragePageState extends State<InformationStoragePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Information Storage")),
+      appBar: AppBar(title: Text("Add Medication Info")),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -168,25 +206,9 @@ class _InformationStoragePageState extends State<InformationStoragePage> {
               ),
             ),
             const SizedBox(height: 16),
-            TextField(
-              controller: _startDateController,
-              decoration: InputDecoration(
-                labelText: "Start Date (YYYY-MM-DD)",
-                border: OutlineInputBorder(),
-              ),
-              readOnly: true,
-              onTap: () => _selectDate(context, _startDateController),
-            ),
+            _buildDatePicker("Start Date (YYYY-MM-DD)", _startDateController),
             const SizedBox(height: 16),
-            TextField(
-              controller: _endDateController,
-              decoration: InputDecoration(
-                labelText: "End Date (YYYY-MM-DD)",
-                border: OutlineInputBorder(),
-              ),
-              readOnly: true,
-              onTap: () => _selectDate(context, _endDateController),
-            ),
+            _buildDatePicker("End Date (YYYY-MM-DD)", _endDateController),
             const SizedBox(height: 16),
             TextField(
               controller: _prescriberController,
@@ -195,23 +217,17 @@ class _InformationStoragePageState extends State<InformationStoragePage> {
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: _saveInformation,
+              onPressed: _confirmAndSave,
               child: Text("Save"),
             ),
-            const SizedBox(height: 16),
-            ElevatedButton(
+            const SizedBox(height: 12),
+            OutlinedButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueGrey, 
-              ),
-              child: Text(
-                "View My Disease List",
-                style: TextStyle(color: Colors.white),
-              ),
+              child: Text("View My Disease List"),
             ),
           ],
         ),

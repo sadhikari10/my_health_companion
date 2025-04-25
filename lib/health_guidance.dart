@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:my_health_companion/database.dart';
 import 'dashboard.dart';
 
 class HealthGuidancePage extends StatefulWidget {
+  final int userId;
+
+  HealthGuidancePage({required this.userId});
+
   @override
   _HealthGuidancePageState createState() => _HealthGuidancePageState();
 }
@@ -34,25 +39,33 @@ class _HealthGuidancePageState extends State<HealthGuidancePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Health Guidance")),
+      appBar: AppBar(
+        title: const Text("Health Guidance"),
+        backgroundColor: Colors.blue.shade800,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.lightBlue.shade100, Colors.blue.shade200],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            colors: [Colors.blue.shade50, Colors.blue.shade200],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
         ),
         child: Column(
           children: [
             Expanded(
               child: Padding(
-                padding: EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("Choose the Nutrient Type", style: TextStyle(fontSize: 18)),
-                    SizedBox(height: 10),
+                    const Text(
+                      "Choose the Nutrient Type",
+                      style: TextStyle(fontSize: 18, color: Colors.blueGrey),
+                    ),
+                    const SizedBox(height: 10),
                     DropdownButtonFormField<String>(
                       value: _selectedNutrient,
                       onChanged: (value) => setState(() => _selectedNutrient = value),
@@ -62,20 +75,49 @@ class _HealthGuidancePageState extends State<HealthGuidancePage> {
                           child: Text(nutrient),
                         );
                       }).toList(),
-                      decoration: InputDecoration(border: OutlineInputBorder()),
+                      decoration: InputDecoration(
+                        border: const OutlineInputBorder(),
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: _submitNutrient,
-                      child: Text("Submit Nutrient"),
-                    ),
-                    SizedBox(height: 30),
-                    ElevatedButton(
-                      onPressed: () => Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => DashboardPage(user: {'first_name': 'User'})),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade600,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 2,
                       ),
-                      child: Text("Return to Dashboard"),
+                      child: const Text("Submit Nutrient", style: TextStyle(fontSize: 16)),
+                    ),
+                    const SizedBox(height: 30),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final user = await DatabaseHelper.instance.getUserById(widget.userId);
+                        if (user != null) {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => DashboardPage(user: user),
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error: User not found')),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade600,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 2,
+                      ),
+                      child: const Text("Return to Dashboard", style: TextStyle(fontSize: 16)),
                     ),
                   ],
                 ),
@@ -84,11 +126,15 @@ class _HealthGuidancePageState extends State<HealthGuidancePage> {
             Container(
               color: Colors.white,
               width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Center(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: const Center(
                 child: Text(
                   "Thriving Health, Vibrant Life Every Day",
-                  style: TextStyle(fontStyle: FontStyle.italic, color: Colors.blueGrey),
+                  style: TextStyle(
+                    fontStyle: FontStyle.italic,
+                    color: Colors.blueGrey,
+                    fontSize: 14,
+                  ),
                 ),
               ),
             ),

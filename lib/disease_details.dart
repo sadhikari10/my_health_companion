@@ -35,6 +35,18 @@ class _DiseaseDetailsPageState extends State<DiseaseDetailsPage> {
     _loadDiseases();
   }
 
+  @override
+  @override
+  void dispose() {
+    _customDiseaseController.dispose();
+    _medicationNameController.dispose();
+    _dosageController.dispose();
+    _startDateController.dispose();
+    _endDateController.dispose();
+    _prescriberController.dispose();
+    super.dispose();
+  }
+  
   Future<void> _loadDiseases() async {
     try {
       final diseases = await DatabaseHelper.instance.getAllDiseases();

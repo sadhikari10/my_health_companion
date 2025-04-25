@@ -6,8 +6,11 @@ import 'log_medication.dart';
 import 'health_guidance.dart';
 import 'appointment_tracking.dart';
 import 'change_information.dart';
-import 'database.dart ' as db; 
+import 'database.dart' as db;
 import 'information_list.dart';
+import 'view_medication_intake.dart';
+import 'view_appointment.dart';
+import 'view_progress.dart';
 
 class DashboardPage extends StatefulWidget {
   final Map<String, dynamic> user;
@@ -28,11 +31,19 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> _refreshUser() async {
-    final updatedUser = await db.DatabaseHelper.instance.getUserById(user['id']);
-    if (updatedUser != null) {
-      setState(() {
-        user = updatedUser;
-      });
+    try {
+      final updatedUser = await db.DatabaseHelper.instance.getUserById(user['id']);
+      if (updatedUser != null) {
+        setState(() {
+          user = updatedUser;
+        });
+      }
+    } catch (e, stackTrace) {
+      print('Error refreshing user: $e');
+      print(stackTrace);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error refreshing user data')),
+      );
     }
   }
 
@@ -44,7 +55,7 @@ class _DashboardPageState extends State<DashboardPage> {
       appBar: AppBar(
         title: Row(
           children: [
-            InkWell(
+            GestureDetector(
               onTap: () async {
                 final result = await Navigator.push(
                   context,
@@ -63,64 +74,166 @@ class _DashboardPageState extends State<DashboardPage> {
                 backgroundColor: profileImagePath == null ? Colors.grey[300] : null,
                 radius: 20,
                 child: profileImagePath == null
-                    ? Icon(Icons.person, color: Colors.grey[700])
+                    ? Icon(Icons.person, color: Colors.grey[700], size: 24)
                     : null,
               ),
             ),
-            SizedBox(width: 12),
-            Text("Welcome, ${user['first_name']}!"),
+            const SizedBox(width: 12),
+            Text(
+              "Welcome, ${user['first_name']}!",
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
+        backgroundColor: Colors.blue.shade800,
+        elevation: 0,
       ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.lightBlue.shade100, Colors.blue.shade200],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            colors: [Colors.blue.shade50, Colors.blue.shade200],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
         ),
-        child: Center(
-          child: Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildButton(context, "Information Storage", InformationListPage(userEmail: user['email'])),
-                _buildButton(context, "Medication Reminder System", MedicationReminderPage()),
-                _buildButton(context, "Log Medication Intake", LogMedicationPage()),
-                _buildButton(context, "Health Guidance", HealthGuidancePage()),
-                _buildButton(context, "Appointment Tracking", AppointmentTrackingPage()),
-                SizedBox(height: 30),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              Expanded(
+                child: GridView.count(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.0,
+                  children: [
+                    _buildGridButton(
                       context,
-                      MaterialPageRoute(builder: (context) => SignInPage()),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                  child: Text("Logout", style: TextStyle(color: Colors.white)),
+                      "Information Storage",
+                      Icons.info_outline,
+                      InformationListPage(userEmail: user['email']),
+                    ),
+                    _buildGridButton(
+                      context,
+                      "Medication Reminder",
+                      Icons.alarm,
+                      MedicationReminderPage(userId: user['id']),
+                    ),
+                    _buildGridButton(
+                      context,
+                      "Log Medication",
+                      Icons.edit_note,
+                      LogMedicationPage(userId: user['id']),
+                    ),
+                    _buildGridButton(
+                      context,
+                      "Health Guidance",
+                      Icons.health_and_safety,
+                      HealthGuidancePage(userId: user['id']),
+                    ),
+                    _buildGridButton(
+                      context,
+                      "Appointments",
+                      Icons.calendar_today,
+                      AppointmentTrackingPage(userId: user['id']),
+                    ),
+                    _buildGridButton(
+                      context,
+                      "View Medicine Intake",
+                      Icons.view_list,
+                      ViewMedicationIntakePage(userId: user['id']),
+                    ),
+                    _buildGridButton(
+                      context,
+                      "View Appointment",
+                      Icons.event,
+                      ViewAppointmentPage(userId: user['id']),
+                    ),
+                    _buildGridButton(
+                      context,
+                      "View Progress",
+                      Icons.trending_up,
+                      ViewProgressPage(userId: user['id']),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => SignInPage()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.shade600,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 2,
+                ),
+                child: const Text(
+                  "Logout",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildButton(BuildContext context, String title, Widget page) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: ElevatedButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => page),
-          );
-        },
-        child: Text(title),
+  Widget _buildGridButton(BuildContext context, String title, IconData icon, Widget page) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => page),
+        );
+      },
+      child: Card(
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue.shade500, Colors.blue.shade700],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 40,
+                color: Colors.white,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

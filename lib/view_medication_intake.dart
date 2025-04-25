@@ -2,37 +2,37 @@ import 'package:flutter/material.dart';
 import 'package:my_health_companion/database.dart';
 import 'dashboard.dart';
 
-class MedicationReminderPage extends StatefulWidget {
+class ViewMedicationIntakePage extends StatefulWidget {
   final int userId;
 
-  MedicationReminderPage({required this.userId});
+  ViewMedicationIntakePage({required this.userId});
 
   @override
-  _MedicationReminderPageState createState() => _MedicationReminderPageState();
+  _ViewMedicationIntakePageState createState() => _ViewMedicationIntakePageState();
 }
 
-class _MedicationReminderPageState extends State<MedicationReminderPage> {
-  List<Map<String, dynamic>> _medications = [];
+class _ViewMedicationIntakePageState extends State<ViewMedicationIntakePage> {
+  List<Map<String, dynamic>> _medicationLogs = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchMedications();
+    _fetchMedicationLogs();
   }
 
-  Future<void> _fetchMedications() async {
+  Future<void> _fetchMedicationLogs() async {
     try {
-      final medications = await DatabaseHelper.instance.getUserMedications(widget.userId);
+      final logs = await DatabaseHelper.instance.getMedicationLogs(widget.userId);
       setState(() {
-        _medications = medications;
+        _medicationLogs = logs;
         _isLoading = false;
       });
     } catch (e, stackTrace) {
-      print('Error fetching medications: $e');
+      print('Error fetching medication logs: $e');
       print(stackTrace);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching medications')),
+        SnackBar(content: Text('Error fetching medication logs')),
       );
       setState(() {
         _isLoading = false;
@@ -40,11 +40,27 @@ class _MedicationReminderPageState extends State<MedicationReminderPage> {
     }
   }
 
+  Future<void> _deleteMedicationLog(int id) async {
+    try {
+      await DatabaseHelper.instance.deleteMedicationLog(id);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Medication log deleted successfully')),
+      );
+      await _fetchMedicationLogs(); // Refresh the list
+    } catch (e, stackTrace) {
+      print('Error deleting medication log: $e');
+      print(stackTrace);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting medication log')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Medication Reminders'),
+        title: const Text('View Medication Intake'),
         backgroundColor: Colors.blue.shade800,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -62,64 +78,65 @@ class _MedicationReminderPageState extends State<MedicationReminderPage> {
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : _medications.isEmpty
+                  : _medicationLogs.isEmpty
                       ? const Center(
                           child: Text(
-                            'No medications found. Add some in the Information Storage Page.',
+                            'No medication logs found.',
                             style: TextStyle(fontSize: 16, color: Colors.blueGrey),
-                            textAlign: TextAlign.center,
                           ),
                         )
-                      : ListView.builder(
-                          itemCount: _medications.length,
-                          itemBuilder: (context, index) {
-                            final medication = _medications[index];
-                            return Card(
-                              elevation: 2,
-                              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: ListTile(
-                                title: Text(
-                                  medication['disease_name'],
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.blueGrey,
+                      : SingleChildScrollView(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            children: _medicationLogs.map((log) {
+                              return Card(
+                                elevation: 2,
+                                margin: const EdgeInsets.symmetric(vertical: 8.0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.all(16.0),
+                                  title: Text(
+                                    log['medicine_name'],
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.blueGrey,
+                                    ),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Date: ${log['log_date']}',
+                                        style: const TextStyle(color: Colors.blueGrey),
+                                      ),
+                                      Text(
+                                        'Time: ${log['log_time']}',
+                                        style: const TextStyle(color: Colors.blueGrey),
+                                      ),
+                                      Text(
+                                        'Day: ${log['log_day']}',
+                                        style: const TextStyle(color: Colors.blueGrey),
+                                      ),
+                                      Text(
+                                        'Status: ${log['taken'] == 1 ? 'Taken' : 'Not Taken'}',
+                                        style: const TextStyle(color: Colors.blueGrey),
+                                      ),
+                                    ],
+                                  ),
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () async {
+                                      await _deleteMedicationLog(log['id']);
+                                    },
                                   ),
                                 ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Medication: ${medication['medication_name']}',
-                                      style: const TextStyle(color: Colors.blueGrey),
-                                    ),
-                                    Text(
-                                      'Dosage: ${medication['dosage']}',
-                                      style: const TextStyle(color: Colors.blueGrey),
-                                    ),
-                                    if (medication['start_date'] != null)
-                                      Text(
-                                        'Start: ${medication['start_date']}',
-                                        style: const TextStyle(color: Colors.blueGrey),
-                                      ),
-                                    if (medication['end_date'] != null)
-                                      Text(
-                                        'End: ${medication['end_date']}',
-                                        style: const TextStyle(color: Colors.blueGrey),
-                                      ),
-                                    if (medication['prescriber'] != null)
-                                      Text(
-                                        'Prescriber: ${medication['prescriber']}',
-                                        style: const TextStyle(color: Colors.blueGrey),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
+                              );
+                            }).toList(),
+                          ),
                         ),
             ),
             Padding(
