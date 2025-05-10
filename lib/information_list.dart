@@ -46,16 +46,17 @@ class _InformationListPageState extends State<InformationListPage> {
   }
 
   Future<void> _deleteMedicationInfo(int id) async {
-    final db = await DatabaseHelper.instance.database;
-    await db.delete(
-      'user_medication_info',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    await _loadMedicationInfo(); // Refresh the list
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Information deleted successfully')),
-    );
+    try {
+      await DatabaseHelper.instance.deleteMedicationInfo(id);
+      await _loadMedicationInfo(); // Refresh the list
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Information deleted successfully')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting information: $e')),
+      );
+    }
   }
 
   Future<void> _showDeleteConfirmationDialog(int id, String diseaseName) async {

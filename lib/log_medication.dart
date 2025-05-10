@@ -18,7 +18,6 @@ class _LogMedicationPageState extends State<LogMedicationPage> {
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   String? _selectedDay;
-  bool _isTaken = true; // Default to Taken
   List<Map<String, dynamic>> _medications = [];
   bool _isLoading = true;
 
@@ -31,6 +30,7 @@ class _LogMedicationPageState extends State<LogMedicationPage> {
   Future<void> _fetchMedications() async {
     try {
       final medications = await DatabaseHelper.instance.getUserMedications(widget.userId);
+      print('Fetched medications: $medications');
       setState(() {
         _medications = medications;
         _isLoading = false;
@@ -39,9 +39,10 @@ class _LogMedicationPageState extends State<LogMedicationPage> {
       print('Error fetching medications: $e');
       print(stackTrace);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching medications')),
+        SnackBar(content: Text('Error fetching medications: $e')),
       );
       setState(() {
+        _medications = [];
         _isLoading = false;
       });
     }
@@ -74,35 +75,93 @@ class _LogMedicationPageState extends State<LogMedicationPage> {
     }
   }
 
+  Future<bool> _canLogMedication() async {
+    if (_selectedMedication == null || _selectedDate == null) {
+      print('Cannot log: _selectedMedication or _selectedDate is null');
+      return false;
+    }
+    final logDate = DateFormat('yyyy-MM-dd').format(_selectedDate!);
+    final remainingDoses = await DatabaseHelper.instance.getRemainingDoses(
+      widget.userId,
+      _selectedMedication!,
+      logDate,
+    );
+    print('Remaining doses for $_selectedMedication on $logDate: $remainingDoses');
+    return remainingDoses > 0;
+  }
+
+  Future<void> _showDailyStatus() async {
+    if (_selectedMedication == null || _selectedDate == null) return;
+    final logDate = DateFormat('yyyy-MM-dd').format(_selectedDate!);
+    final isToday = logDate == DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final logCount = await DatabaseHelper.instance.getDailyLogCount(widget.userId, _selectedMedication!, logDate);
+    // For today, show only taken doses; missed doses are calculated at end of day
+    if (isToday) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Status: $logCount taken today')),
+      );
+    } else {
+      final medication = _medications.firstWhere(
+        (m) => m['medication_name'] == _selectedMedication,
+        orElse: () => <String, dynamic>{'dosage': 'unknown'},
+      );
+      final dosage = medication['dosage'] as String? ?? 'unknown';
+      final dailyDosage = dosage.isNotEmpty ? await DatabaseHelper.instance.parseDailyDosage(dosage) : 1;
+      final missedCount = dailyDosage - logCount > 0 ? dailyDosage - logCount : 0;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Status: $logCount taken, $missedCount missed on $logDate')),
+      );
+    }
+  }
+
   void _submitLog() async {
     if (_formKey.currentState!.validate()) {
       try {
+        final canLog = await _canLogMedication();
+        if (!canLog) {
+          final logDate = DateFormat('yyyy-MM-dd').format(_selectedDate!);
+          final remainingDoses = await DatabaseHelper.instance.getRemainingDoses(
+            widget.userId,
+            _selectedMedication!,
+            logDate,
+          );
+          print('Cannot log: No remaining doses for $_selectedMedication on $logDate');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('All doses already taken for today')),
+          );
+          return;
+        }
         final log = {
           'user_id': widget.userId,
           'medicine_name': _selectedMedication!,
-          'taken': _isTaken ? 1 : 0,
+          'taken': 1, // Always log as taken
           'log_date': DateFormat('yyyy-MM-dd').format(_selectedDate!),
           'log_time': _selectedTime!.format(context),
           'log_day': _selectedDay!,
         };
+        print('Submitting log: $log');
         await DatabaseHelper.instance.insertMedicationLog(log);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Medication ${_isTaken ? 'taken' : 'missed'} logged successfully')),
+          SnackBar(content: Text('Medication logged successfully')),
         );
+        // Show daily status after logging
+        await _showDailyStatus();
         // Clear form
         setState(() {
           _selectedMedication = null;
           _selectedDate = null;
           _selectedTime = null;
           _selectedDay = null;
-          _isTaken = true;
           _formKey.currentState!.reset();
         });
       } catch (e, stackTrace) {
         print('Error logging medication: $e');
         print(stackTrace);
+        final errorMessage = e.toString().contains('All doses already taken')
+            ? 'All doses already taken for today'
+            : 'Error logging medication: $e';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error logging medication')),
+          SnackBar(content: Text(errorMessage)),
         );
       }
     }
@@ -111,7 +170,7 @@ class _LogMedicationPageState extends State<LogMedicationPage> {
   Future<void> _showConfirmationDialog() async {
     return showDialog<void>(
       context: context,
-      barrierDismissible: false, // User must tap a button
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text(
@@ -129,7 +188,7 @@ class _LogMedicationPageState extends State<LogMedicationPage> {
                 style: TextStyle(color: Colors.blueGrey),
               ),
               onPressed: () {
-                Navigator.of(context).pop(); // Close dialog
+                Navigator.of(context).pop();
               },
             ),
             TextButton(
@@ -143,8 +202,8 @@ class _LogMedicationPageState extends State<LogMedicationPage> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               onPressed: () {
-                Navigator.of(context).pop(); // Close dialog
-                _submitLog(); // Proceed with logging
+                Navigator.of(context).pop();
+                _submitLog();
               },
             ),
           ],
@@ -198,39 +257,11 @@ class _LogMedicationPageState extends State<LogMedicationPage> {
                                 );
                               }).toList(),
                               decoration: InputDecoration(
-                                border: const OutlineInputBorder(),
+                                border: OutlineInputBorder(),
                                 filled: true,
                                 fillColor: Colors.white,
                               ),
                               validator: (value) => value == null ? 'Please select a medication' : null,
-                            ),
-                            const SizedBox(height: 16),
-                            const Text(
-                              'Intake Status',
-                              style: TextStyle(fontSize: 16, color: Colors.blueGrey),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: RadioListTile<bool>(
-                                    title: const Text('Taken'),
-                                    value: true,
-                                    groupValue: _isTaken,
-                                    onChanged: (value) => setState(() => _isTaken = value!),
-                                    activeColor: Colors.blue.shade600,
-                                  ),
-                                ),
-                                Expanded(
-                                  child: RadioListTile<bool>(
-                                    title: const Text('Missed'),
-                                    value: false,
-                                    groupValue: _isTaken,
-                                    onChanged: (value) => setState(() => _isTaken = value!),
-                                    activeColor: Colors.blue.shade600,
-                                  ),
-                                ),
-                              ],
                             ),
                             const SizedBox(height: 16),
                             const Text(
@@ -244,7 +275,7 @@ class _LogMedicationPageState extends State<LogMedicationPage> {
                                 hintText: _selectedDate == null
                                     ? 'Choose a date'
                                     : DateFormat('yyyy-MM-dd').format(_selectedDate!),
-                                border: const OutlineInputBorder(),
+                                border: OutlineInputBorder(),
                                 filled: true,
                                 fillColor: Colors.white,
                               ),
@@ -263,7 +294,7 @@ class _LogMedicationPageState extends State<LogMedicationPage> {
                                 hintText: _selectedTime == null
                                     ? 'Choose a time'
                                     : _selectedTime!.format(context),
-                                border: const OutlineInputBorder(),
+                                border: OutlineInputBorder(),
                                 filled: true,
                                 fillColor: Colors.white,
                               ),

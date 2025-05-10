@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
+import 'package:intl/intl.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
@@ -68,6 +69,7 @@ class DatabaseHelper {
       await insertPredefinedDiseases(database).timeout(Duration(seconds: 10), onTimeout: () {
         throw TimeoutException('Inserting predefined diseases timed out');
       });
+      print('Database initialization completed successfully');
       return database;
     } catch (e, stackTrace) {
       print('Error opening database: $e');
@@ -409,6 +411,40 @@ class DatabaseHelper {
     }
   }
 
+  Future<int> insertMedicationInfo(
+    int userId,
+    String diseaseName,
+    String medicationName,
+    String dosage,
+    String? startDate,
+    String? endDate,
+    String? prescriber,
+  ) async {
+    print('Inserting medication info: $medicationName for user ID: $userId');
+    final db = await database;
+    try {
+      final id = await db.insert('user_medication_info', {
+        'user_id': userId,
+        'disease_name': diseaseName,
+        'medication_name': medicationName,
+        'dosage': dosage,
+        'start_date': startDate,
+        'end_date': endDate,
+        'prescriber': prescriber,
+      });
+      print('Medication info inserted with ID: $id');
+      // Initialize doses for the current day
+      final currentDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      await initializeDailyDoses(userId, currentDate, medicationName: medicationName);
+      print('Initialized daily doses for $medicationName on $currentDate');
+      return id;
+    } catch (e, stackTrace) {
+      print('Error inserting medication info: $e');
+      print(stackTrace);
+      rethrow;
+    }
+  }
+
   Future<int> updateMedicationInfo(
     int id,
     String diseaseName,
@@ -443,6 +479,50 @@ class DatabaseHelper {
     }
   }
 
+  Future<void> deleteMedicationInfo(int id) async {
+    print('Deleting medication info ID: $id');
+    final db = await database;
+    try {
+      final meds = await db.query(
+        'user_medication_info',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      if (meds.isEmpty) {
+        print('No medication found with ID: $id');
+        return;
+      }
+      final medicationName = meds.first['medication_name'] as String;
+      final userId = meds.first['user_id'] as int;
+      final diseaseName = meds.first['disease_name'] as String;
+
+      await db.delete(
+        'medication_logs',
+        where: 'user_id = ? AND medicine_name = ?',
+        whereArgs: [userId, medicationName],
+      );
+      print('Deleted medication logs for $medicationName');
+
+      await db.delete(
+        'medication_reminders',
+        where: 'user_id = ? AND disease_name = ?',
+        whereArgs: [userId, diseaseName],
+      );
+      print('Deleted medication reminders for $diseaseName');
+
+      await db.delete(
+        'user_medication_info',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      print('Medication info deleted successfully for ID: $id');
+    } catch (e, stackTrace) {
+      print('Error deleting medication info: $e');
+      print(stackTrace);
+      rethrow;
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getUserMedications(int userId) async {
     print('Fetching medications for user ID: $userId');
     final db = await database;
@@ -452,7 +532,7 @@ class DatabaseHelper {
         where: 'user_id = ?',
         whereArgs: [userId],
       );
-      print('Fetched ${results.length} medications');
+      print('Fetched ${results.length} medications: $results');
       return results;
     } catch (e, stackTrace) {
       print('Error fetching user medications: $e');
@@ -462,15 +542,87 @@ class DatabaseHelper {
   }
 
   Future<void> insertMedicationLog(Map<String, dynamic> log) async {
-    print('Inserting medication log: ${log['medicine_name']}');
+    print('Processing medication log for: ${log['medicine_name']}');
     final db = await database;
+    final userId = log['user_id'] as int;
+    final medicineName = log['medicine_name'] as String;
+    final logDate = log['log_date'] as String;
+    final logTime = log['log_time'] as String;
+    final logDay = log['log_day'] as String;
+
     try {
-      await db.insert('medication_logs', log);
-      print('Medication log inserted successfully');
+      final remainingDoses = await getRemainingDoses(userId, medicineName, logDate);
+      if (remainingDoses == 0) {
+        print('All doses already taken for $medicineName on $logDate');
+        throw Exception('All doses already taken for today');
+      }
+
+      final untakenLogs = await db.query(
+        'medication_logs',
+        where: 'user_id = ? AND medicine_name = ? AND log_date = ? AND taken = ?',
+        whereArgs: [userId, medicineName, logDate, 0],
+        orderBy: 'id ASC',
+        limit: 1,
+      );
+
+      if (untakenLogs.isNotEmpty) {
+        final logId = untakenLogs.first['id'] as int;
+        await db.update(
+          'medication_logs',
+          {
+            'taken': 1,
+            'log_time': logTime,
+            'log_day': logDay,
+          },
+          where: 'id = ?',
+          whereArgs: [logId],
+        );
+        print('Updated medication log ID $logId to taken for $medicineName on $logDate at $logTime');
+      } else {
+        await db.insert('medication_logs', {
+          'user_id': userId,
+          'medicine_name': medicineName,
+          'taken': 1,
+          'log_date': logDate,
+          'log_time': logTime,
+          'log_day': logDay,
+        });
+        print('Inserted new taken log for $medicineName on $logDate at $logTime (fallback)');
+      }
     } catch (e, stackTrace) {
-      print('Error inserting medication log: $e');
+      print('Error processing medication log: $e');
       print(stackTrace);
       rethrow;
+    }
+  }
+
+  Future<int> getRemainingDoses(int userId, String medicineName, String logDate) async {
+    print('Checking remaining doses for user ID: $userId, medicine: $medicineName, date: $logDate');
+    final db = await database;
+    try {
+      final meds = await db.query(
+        'user_medication_info',
+        where: 'user_id = ? AND medication_name = ?',
+        whereArgs: [userId, medicineName],
+      );
+      if (meds.isEmpty) {
+        print('No medication found for $medicineName');
+        return 0;
+      }
+      final dosage = meds.first['dosage'] as String;
+      final dailyDosage = await parseDailyDosage(dosage);
+
+      final takenLogs = await db.query(
+        'medication_logs',
+        where: 'user_id = ? AND medicine_name = ? AND log_date = ? AND taken = ?',
+        whereArgs: [userId, medicineName, logDate, 1],
+      );
+      print('Found ${takenLogs.length} taken logs for $medicineName on $logDate');
+      return dailyDosage - takenLogs.length;
+    } catch (e, stackTrace) {
+      print('Error checking remaining doses: $e');
+      print(stackTrace);
+      return 0;
     }
   }
 
@@ -562,7 +714,7 @@ class DatabaseHelper {
   Future<List<Map<String, dynamic>>> getMedicationLogsWithDiseases(int userId, DateTime startTime) async {
     print('Fetching medication logs with diseases for user ID: $userId from $startTime');
     final db = await database;
-    final startDate = startTime.toIso8601String().substring(0, 10); // YYYY-MM-DD
+    final startDate = startTime.toIso8601String().substring(0, 10);
     try {
       final results = await db.rawQuery('''
         SELECT ml.id, ml.medicine_name, ml.taken, ml.log_date, ml.log_time, ml.log_day, umi.disease_name
@@ -571,7 +723,7 @@ class DatabaseHelper {
         WHERE ml.user_id = ? AND ml.log_date >= ?
         ORDER BY ml.log_date DESC, ml.log_time DESC
       ''', [userId, startDate]);
-      print('Fetched ${results.length} medication logs with diseases');
+      print('Fetched ${results.length} medication logs with diseases: $results');
       return results;
     } catch (e, stackTrace) {
       print('Error fetching medication logs with diseases: $e');
@@ -584,16 +736,27 @@ class DatabaseHelper {
     print('Inserting medication reminder for disease: ${reminder['disease_name']}');
     final db = await database;
     try {
-      // Update or insert reminder (replace if exists)
-      await db.delete(
-        'medication_reminders',
-        where: 'user_id = ? AND disease_name = ?',
-        whereArgs: [reminder['user_id'], reminder['disease_name']],
-      );
       await db.insert('medication_reminders', reminder);
       print('Medication reminder inserted successfully');
     } catch (e, stackTrace) {
       print('Error inserting medication reminder: $e');
+      print(stackTrace);
+      rethrow;
+    }
+  }
+
+  Future<void> deleteMedicationReminder(int id) async {
+    print('Deleting medication reminder ID: $id');
+    final db = await database;
+    try {
+      await db.delete(
+        'medication_reminders',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      print('Medication reminder deleted successfully');
+    } catch (e, stackTrace) {
+      print('Error deleting medication reminder: $e');
       print(stackTrace);
       rethrow;
     }
@@ -612,6 +775,108 @@ class DatabaseHelper {
       return results;
     } catch (e, stackTrace) {
       print('Error fetching medication reminders: $e');
+      print(stackTrace);
+      rethrow;
+    }
+  }
+
+  Future<int> getDailyLogCount(int userId, String medicineName, String logDate) async {
+    print('Counting logs for user ID: $userId, medicine: $medicineName, date: $logDate');
+    final db = await database;
+    try {
+      final results = await db.query(
+        'medication_logs',
+        where: 'user_id = ? AND medicine_name = ? AND log_date = ? AND taken = ?',
+        whereArgs: [userId, medicineName, logDate, 1],
+      );
+      print('Found ${results.length} taken logs: $results');
+      return results.length;
+    } catch (e, stackTrace) {
+      print('Error counting daily logs: $e');
+      print(stackTrace);
+      rethrow;
+    }
+  }
+
+  Future<int> parseDailyDosage(String dosage) async {
+    print('Parsing dosage: $dosage');
+    try {
+      final dosageLower = dosage.toLowerCase().trim();
+      if (RegExp(r'^\d+$').hasMatch(dosageLower)) {
+        final count = int.parse(dosageLower);
+        print('Parsed numeric-only dosage: $count times daily');
+        return count;
+      }
+      final numericRegex = RegExp(r'(\d+)\s*(times|time)\s*(daily|per day)', caseSensitive: false);
+      final numericMatch = numericRegex.firstMatch(dosageLower);
+      if (numericMatch != null) {
+        final count = int.parse(numericMatch.group(1)!);
+        print('Parsed numeric dosage: $count times daily');
+        return count;
+      }
+      if (dosageLower.contains('twice')) {
+        print('Parsed textual dosage: 2 times daily');
+        return 2;
+      }
+      if (dosageLower.contains('thrice')) {
+        print('Parsed textual dosage: 3 times daily');
+        return 3;
+      }
+      print('Defaulting to 1 dose per day');
+      return 1;
+    } catch (e, stackTrace) {
+      print('Error parsing dosage: $e');
+      print(stackTrace);
+      return 1;
+    }
+  }
+
+  Future<void> initializeDailyDoses(int userId, String logDate, {String? medicationName}) async {
+    print('Initializing daily doses for user ID: $userId on $logDate${medicationName != null ? ' for $medicationName' : ''}');
+    final db = await database;
+    try {
+      final medications = medicationName != null
+          ? await db.query(
+              'user_medication_info',
+              where: 'user_id = ? AND medication_name = ?',
+              whereArgs: [userId, medicationName],
+            )
+          : await getUserMedications(userId);
+
+      for (var med in medications) {
+        final medName = med['medication_name'] as String;
+        final dosage = med['dosage'] as String;
+        final dailyDosage = await parseDailyDosage(dosage);
+
+        // Check if doses are already initialized for this medication and date
+        final existingLogs = await db.query(
+          'medication_logs',
+          where: 'user_id = ? AND medicine_name = ? AND log_date = ?',
+          whereArgs: [userId, medName, logDate],
+        );
+        if (existingLogs.length >= dailyDosage) {
+          print('Doses already initialized for $medName on $logDate (${existingLogs.length} logs found)');
+          continue;
+        }
+
+        // Insert remaining doses
+        final dosesToInsert = dailyDosage - existingLogs.length;
+        print('Initializing $dosesToInsert doses for $medName on $logDate');
+        for (var i = 0; i < dosesToInsert; i++) {
+          final log = {
+            'user_id': userId,
+            'medicine_name': medName,
+            'taken': 0,
+            'log_date': logDate,
+            'log_time': '00:00',
+            'log_day': DateFormat('EEEE').format(DateTime.parse(logDate)),
+          };
+          await db.insert('medication_logs', log);
+          print('Inserted untaken dose ${i + 1} for $medName on $logDate');
+        }
+      }
+    } catch (e, stackTrace) {
+      print('Error initializing daily doses: $e');
       print(stackTrace);
       rethrow;
     }

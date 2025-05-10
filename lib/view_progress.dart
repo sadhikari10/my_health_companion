@@ -26,18 +26,20 @@ class _ViewProgressPageState extends State<ViewProgressPage> {
   Future<void> _fetchMedicationLogs() async {
     try {
       DateTime startTime;
+      final now = DateTime.now();
       switch (_selectedTimeFrame) {
         case 1:
-          startTime = DateTime.now().subtract(Duration(days: 7));
+          startTime = DateTime(now.year, now.month, now.day).subtract(Duration(days: 7));
           break;
         case 2:
-          startTime = DateTime.now().subtract(Duration(days: 30));
+          startTime = DateTime(now.year, now.month, now.day).subtract(Duration(days: 30));
           break;
         case 0:
         default:
-          startTime = DateTime.now().subtract(Duration(hours: 24));
+          startTime = DateTime(now.year, now.month, now.day); // Start of current day
           break;
       }
+      print('Fetching logs for user ID: ${widget.userId}, start time: $startTime');
       final logs = await DatabaseHelper.instance.getMedicationLogsWithDiseases(widget.userId, startTime);
       print('Fetched ${logs.length} medication logs: $logs');
       setState(() {
@@ -48,7 +50,7 @@ class _ViewProgressPageState extends State<ViewProgressPage> {
       print('Error fetching medication logs: $e');
       print(stackTrace);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching medication logs')),
+        SnackBar(content: Text('Error fetching medication logs: $e')),
       );
       setState(() {
         _isLoading = false;
@@ -59,7 +61,7 @@ class _ViewProgressPageState extends State<ViewProgressPage> {
   Map<String, Map<String, int>> _aggregateMedicationData() {
     final Map<String, Map<String, int>> diseaseStats = {};
     for (var log in _medicationLogs) {
-      final disease = log['disease_name'] as String;
+      final disease = log['disease_name'] as String? ?? 'Unknown';
       final taken = log['taken'] == 1;
       if (!diseaseStats.containsKey(disease)) {
         diseaseStats[disease] = {'taken': 0, 'missed': 0};
