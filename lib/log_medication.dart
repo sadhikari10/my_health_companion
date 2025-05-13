@@ -217,21 +217,28 @@ class _LogMedicationPageState extends State<LogMedicationPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Log Medication'),
-        backgroundColor: Colors.blue.shade800,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
         elevation: 0,
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade50, Colors.blue.shade200],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+      body: Column(
+        children: [
+          // Horizontal line separator
+          Container(
+            height: 1,
+            color: Colors.grey.shade400,
+            margin: const EdgeInsets.symmetric(horizontal: 16.0),
           ),
-        ),
-        child: Column(
-          children: [
-            Expanded(
+          // Main body content
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue.shade800, Colors.white],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : SingleChildScrollView(
@@ -243,63 +250,86 @@ class _LogMedicationPageState extends State<LogMedicationPage> {
                           children: [
                             const Text(
                               'Select Medication',
-                              style: TextStyle(fontSize: 16, color: Colors.blueGrey),
+                              style: TextStyle(fontSize: 16, color: Colors.black87),
                             ),
                             const SizedBox(height: 8),
-                            DropdownButtonFormField<String>(
-                              value: _selectedMedication,
-                              hint: const Text('Choose a medication'),
-                              onChanged: (value) => setState(() => _selectedMedication = value),
-                              items: _medications.map((med) {
-                                return DropdownMenuItem<String>(
-                                  value: med['medication_name'] as String,
-                                  child: Text(med['medication_name'] as String),
-                                );
-                              }).toList(),
-                              decoration: InputDecoration(
-                                border: OutlineInputBorder(),
-                                filled: true,
-                                fillColor: Colors.white,
+                            Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 20),
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.9),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.grey),
                               ),
-                              validator: (value) => value == null ? 'Please select a medication' : null,
+                              child: DropdownButtonFormField<String>(
+                                value: _selectedMedication,
+                                hint: const Text('Choose a medication'),
+                                onChanged: (value) => setState(() => _selectedMedication = value),
+                                items: _medications.map((med) {
+                                  return DropdownMenuItem<String>(
+                                    value: med['medication_name'] as String,
+                                    child: Text(med['medication_name'] as String),
+                                  );
+                                }).toList(),
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                ),
+                                validator: (value) => value == null ? 'Please select a medication' : null,
+                              ),
                             ),
                             const SizedBox(height: 16),
                             const Text(
                               'Select Date',
-                              style: TextStyle(fontSize: 16, color: Colors.blueGrey),
+                              style: TextStyle(fontSize: 16, color: Colors.black87),
                             ),
                             const SizedBox(height: 8),
-                            TextFormField(
-                              readOnly: true,
-                              decoration: InputDecoration(
-                                hintText: _selectedDate == null
-                                    ? 'Choose a date'
-                                    : DateFormat('yyyy-MM-dd').format(_selectedDate!),
-                                border: OutlineInputBorder(),
-                                filled: true,
-                                fillColor: Colors.white,
+                            Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 20),
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.9),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.grey),
                               ),
-                              onTap: () => _selectDate(context),
-                              validator: (value) => _selectedDate == null ? 'Please select a date' : null,
+                              child: TextFormField(
+                                readOnly: true,
+                                decoration: InputDecoration(
+                                  hintText: _selectedDate == null
+                                      ? 'Choose a date'
+                                      : DateFormat('yyyy-MM-dd').format(_selectedDate!),
+                                  border: InputBorder.none,
+                                  suffixIcon: Icon(Icons.calendar_today, color: Colors.blue.shade600),
+                                ),
+                                onTap: () => _selectDate(context),
+                                validator: (value) => _selectedDate == null ? 'Please select a date' : null,
+                              ),
                             ),
                             const SizedBox(height: 16),
                             const Text(
                               'Select Time',
-                              style: TextStyle(fontSize: 16, color: Colors.blueGrey),
+                              style: TextStyle(fontSize: 16, color: Colors.black87),
                             ),
                             const SizedBox(height: 8),
-                            TextFormField(
-                              readOnly: true,
-                              decoration: InputDecoration(
-                                hintText: _selectedTime == null
-                                    ? 'Choose a time'
-                                    : _selectedTime!.format(context),
-                                border: OutlineInputBorder(),
-                                filled: true,
-                                fillColor: Colors.white,
+                            Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 20),
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.9),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.grey),
                               ),
-                              onTap: () => _selectTime(context),
-                              validator: (value) => _selectedTime == null ? 'Please select a time' : null,
+                              child: TextFormField(
+                                readOnly: true,
+                                decoration: InputDecoration(
+                                  hintText: _selectedTime == null
+                                      ? 'Choose a time'
+                                      : _selectedTime!.format(context),
+                                  border: InputBorder.none,
+                                  suffixIcon: Icon(Icons.access_time, color: Colors.blue.shade600),
+                                ),
+                                onTap: () => _selectTime(context),
+                                validator: (value) => _selectedTime == null ? 'Please select a time' : null,
+                              ),
                             ),
                             const SizedBox(height: 24),
                             Center(
@@ -356,23 +386,23 @@ class _LogMedicationPageState extends State<LogMedicationPage> {
                       ),
                     ),
             ),
-            Container(
-              color: Colors.white,
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: const Center(
-                child: Text(
-                  'Thriving Health, Vibrant Life Every Day',
-                  style: TextStyle(
-                    fontStyle: FontStyle.italic,
-                    color: Colors.blueGrey,
-                    fontSize: 14,
-                  ),
+          ),
+          Container(
+            color: Colors.white,
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: const Center(
+              child: Text(
+                'Thriving Health, Vibrant Life Every Day',
+                style: TextStyle(
+                  fontStyle: FontStyle.italic,
+                  color: Colors.blueGrey,
+                  fontSize: 14,
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

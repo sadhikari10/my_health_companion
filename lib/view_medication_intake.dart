@@ -40,49 +40,43 @@ class _ViewMedicationIntakePageState extends State<ViewMedicationIntakePage> {
     }
   }
 
-  Future<void> _deleteMedicationLog(int id) async {
-    try {
-      await DatabaseHelper.instance.deleteMedicationLog(id);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Medication log deleted successfully')),
-      );
-      await _fetchMedicationLogs(); // Refresh the list
-    } catch (e, stackTrace) {
-      print('Error deleting medication log: $e');
-      print(stackTrace);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error deleting medication log')),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('View Medication Intake'),
-        backgroundColor: Colors.blue.shade800,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
         elevation: 0,
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade50, Colors.blue.shade200],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+      body: Column(
+        children: [
+          // Horizontal line separator
+          Container(
+            height: 1,
+            color: Colors.grey.shade400,
+            margin: const EdgeInsets.symmetric(horizontal: 16.0),
           ),
-        ),
-        child: Column(
-          children: [
-            Expanded(
+          // Main body content
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/medical_image.jpg'),
+                  fit: BoxFit.cover,
+                  colorFilter: ColorFilter.mode(
+                    Colors.white.withOpacity(0.6),
+                    BlendMode.dstATop,
+                  ),
+                ),
+              ),
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _medicationLogs.isEmpty
                       ? const Center(
                           child: Text(
                             'No medication logs found.',
-                            style: TextStyle(fontSize: 16, color: Colors.blueGrey),
+                            style: TextStyle(fontSize: 16, color: Colors.black87),
                           ),
                         )
                       : SingleChildScrollView(
@@ -95,6 +89,7 @@ class _ViewMedicationIntakePageState extends State<ViewMedicationIntakePage> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
+                                color: Colors.white.withOpacity(0.9),
                                 child: ListTile(
                                   contentPadding: const EdgeInsets.all(16.0),
                                   title: Text(
@@ -102,7 +97,7 @@ class _ViewMedicationIntakePageState extends State<ViewMedicationIntakePage> {
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.blueGrey,
+                                      color: Colors.black87,
                                     ),
                                   ),
                                   subtitle: Column(
@@ -111,27 +106,21 @@ class _ViewMedicationIntakePageState extends State<ViewMedicationIntakePage> {
                                       const SizedBox(height: 8),
                                       Text(
                                         'Date: ${log['log_date']}',
-                                        style: const TextStyle(color: Colors.blueGrey),
+                                        style: const TextStyle(color: Colors.black87),
                                       ),
                                       Text(
                                         'Time: ${log['log_time']}',
-                                        style: const TextStyle(color: Colors.blueGrey),
+                                        style: const TextStyle(color: Colors.black87),
                                       ),
                                       Text(
                                         'Day: ${log['log_day']}',
-                                        style: const TextStyle(color: Colors.blueGrey),
+                                        style: const TextStyle(color: Colors.black87),
                                       ),
                                       Text(
                                         'Status: ${log['taken'] == 1 ? 'Taken' : 'Not Taken'}',
-                                        style: const TextStyle(color: Colors.blueGrey),
+                                        style: const TextStyle(color: Colors.black87),
                                       ),
                                     ],
-                                  ),
-                                  trailing: IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () async {
-                                      await _deleteMedicationLog(log['id']);
-                                    },
                                   ),
                                 ),
                               );
@@ -139,54 +128,54 @@ class _ViewMedicationIntakePageState extends State<ViewMedicationIntakePage> {
                           ),
                         ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: () async {
-                  final user = await DatabaseHelper.instance.getUserById(widget.userId);
-                  if (user != null) {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => DashboardPage(user: user),
-                      ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: User not found')),
-                    );
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue.shade600,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 2,
-                ),
-                child: const Text(
-                  'Return to Dashboard',
-                  style: TextStyle(fontSize: 16),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
+              onPressed: () async {
+                final user = await DatabaseHelper.instance.getUserById(widget.userId);
+                if (user != null) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DashboardPage(user: user),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: User not found')),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue.shade600,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: 2,
+              ),
+              child: const Text(
+                'Return to Dashboard',
+                style: TextStyle(fontSize: 16),
+              ),
+            ),
+          ),
+          Container(
+            color: Colors.white,
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: const Center(
+              child: Text(
+                'Thriving Health, Vibrant Life Every Day',
+                style: TextStyle(
+                  fontStyle: FontStyle.italic,
+                  color: Colors.blueGrey,
+                  fontSize: 14,
                 ),
               ),
             ),
-            Container(
-              color: Colors.white,
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: const Center(
-                child: Text(
-                  'Thriving Health, Vibrant Life Every Day',
-                  style: TextStyle(
-                    fontStyle: FontStyle.italic,
-                    color: Colors.blueGrey,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

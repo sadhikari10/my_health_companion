@@ -15,7 +15,7 @@ class ChangeInformationPage extends StatefulWidget {
 class _ChangeInformationPageState extends State<ChangeInformationPage> {
   Map<String, dynamic>? user;
   Map<String, TextEditingController> _controllers = {};
-  String? _imagePath;  // Store the image path
+  String? _imagePath; // Store the image path
   bool _passwordVisible = false; // Flag to toggle password visibility
 
   @override
@@ -31,7 +31,7 @@ class _ChangeInformationPageState extends State<ChangeInformationPage> {
       setState(() {
         user = userData;
         _controllers = _createControllers(userData);
-        _imagePath = userData['profile_image'];  // Get the image path from the user data
+        _imagePath = userData['profile_image'];
       });
     }
   }
@@ -40,7 +40,7 @@ class _ChangeInformationPageState extends State<ChangeInformationPage> {
   Map<String, TextEditingController> _createControllers(Map<String, dynamic> userData) {
     Map<String, TextEditingController> controllers = {};
     userData.forEach((key, value) {
-      if (value != null && key != 'id' && key != 'profile_image') {  // Don't include 'id' or 'profile_image'
+      if (value != null && key != 'id' && key != 'profile_image') {
         controllers[key] = TextEditingController(text: value.toString());
       }
     });
@@ -65,8 +65,59 @@ class _ChangeInformationPageState extends State<ChangeInformationPage> {
     super.dispose();
   }
 
+  // Validate input fields using regular expressions
+  bool _validateInputs() {
+    // Email regex: user@domain.com
+    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    // Name regex: Letters, spaces, hyphens only
+    final nameRegex = RegExp(r'^[a-zA-Z\s-]+$');
+    // Contact number regex: Digits, optional + at start
+    final contactRegex = RegExp(r'^\+?\d{7,15}$');
+
+    if (!_controllers.containsKey('email') || !emailRegex.hasMatch(_controllers['email']!.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please enter a valid email address")),
+      );
+      return false;
+    }
+
+    if (!_controllers.containsKey('first_name') || !nameRegex.hasMatch(_controllers['first_name']!.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("First name should contain only letters, spaces, or hyphens")),
+      );
+      return false;
+    }
+
+    if (!_controllers.containsKey('last_name') || !nameRegex.hasMatch(_controllers['last_name']!.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Last name should contain only letters, spaces, or hyphens")),
+      );
+      return false;
+    }
+
+    if (!_controllers.containsKey('contact_no') || !contactRegex.hasMatch(_controllers['contact_no']!.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Contact number should be 7-15 digits, optionally starting with +")),
+      );
+      return false;
+    }
+
+    if (!_controllers.containsKey('password') || _controllers['password']!.text.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Password must be at least 6 characters long")),
+      );
+      return false;
+    }
+
+    return true;
+  }
+
   // Function to save the updated user information
   Future<void> _saveUserInfo() async {
+    if (!_validateInputs()) {
+      return;
+    }
+
     // Prepare the updated user data
     Map<String, dynamic> updatedUser = {};
     _controllers.forEach((key, controller) {
@@ -74,7 +125,7 @@ class _ChangeInformationPageState extends State<ChangeInformationPage> {
     });
 
     if (_imagePath != null) {
-      updatedUser['profile_image'] = _imagePath;  // Update the image path
+      updatedUser['profile_image'] = _imagePath;
     }
 
     // Update the user information in the database
@@ -90,9 +141,8 @@ class _ChangeInformationPageState extends State<ChangeInformationPage> {
 
     // Show a success message
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Information updated successfully")));
-  
-  Navigator.pop(context, updatedUser);
-  //Navigator.pop(context, 'User details updated successfully');
+
+    Navigator.pop(context, updatedUser);
   }
 
   @override
@@ -105,31 +155,116 @@ class _ChangeInformationPageState extends State<ChangeInformationPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text('Change Information')),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Dynamically create form fields based on the available data
-            ..._buildFormFields(),
-
-            // Save button
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _saveUserInfo,
-              child: Text("Save Changes"),
-            ),
-
-            // Button to return to the homepage
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);  // This will take the user back to the previous screen (home page)
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: Text('Change Information'),
+        backgroundColor: Colors.blue.shade800.withOpacity(0.8),
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Fallback background color
+          Container(
+            color: Colors.blue.shade50,
+          ),
+          // Background image
+          Positioned.fill(
+            child: Builder(
+              builder: (context) {
+                try {
+                  return Image.asset(
+                    'assets/images/sss.jpg',
+                    fit: BoxFit.contain,
+                    alignment: Alignment.center,
+                    errorBuilder: (context, error, stackTrace) {
+                      print('Asset loading error: $error\n$stackTrace');
+                      return Container(
+                        color: Colors.blue.shade50,
+                        child: Center(child: Text('Failed to load background image')),
+                      );
+                    },
+                  );
+                } catch (e) {
+                  print('Exception loading asset: $e');
+                  return Container(
+                    color: Colors.blue.shade50,
+                    child: Center(child: Text('Exception loading background image')),
+                  );
+                }
               },
-              child: Text("Back to Home"),
             ),
-          ],
-        ),
+          ),
+          // Semi-transparent overlay for readability
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withOpacity(0.3),
+            ),
+          ),
+          // Content
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  // Horizontal line separator
+                  Container(
+                    height: 1,
+                    color: Colors.grey.shade400,
+                    margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                  ),
+                  SizedBox(height: 16),
+                  // Form fields
+                  ..._buildFormFields(),
+                  // Save button
+                  SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: ElevatedButton(
+                        onPressed: _saveUserInfo,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue.shade600,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: Text("Save Changes"),
+                      ),
+                    ),
+                  ),
+                  // Back to Home button
+                  SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue.shade600,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: Text("Back to Home"),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 40),
+                  Text(
+                    "Thriving Health, Vibrant Life Every Day",
+                    style: TextStyle(
+                      fontStyle: FontStyle.italic,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -139,72 +274,61 @@ class _ChangeInformationPageState extends State<ChangeInformationPage> {
     List<Widget> fields = [];
 
     _controllers.forEach((key, controller) {
-      if (key == 'password') {
-        fields.add(
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
+      fields.add(
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Container(
+            margin: EdgeInsets.symmetric(horizontal: 20),
+            padding: EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.9),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey),
+            ),
             child: TextField(
               controller: controller,
-              obscureText: !_passwordVisible,  // Hide the password by default
+              obscureText: key == 'password' && !_passwordVisible,
               decoration: InputDecoration(
                 labelText: _capitalize(key),
-                border: OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _passwordVisible ? Icons.visibility : Icons.visibility_off,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _passwordVisible = !_passwordVisible;  // Toggle password visibility
-                    });
-                  },
-                ),
+                border: InputBorder.none,
+                suffixIcon: key == 'password'
+                    ? IconButton(
+                        icon: Icon(
+                          _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _passwordVisible = !_passwordVisible;
+                          });
+                        },
+                      )
+                    : null,
               ),
               onChanged: (value) {
                 setState(() {
-                  user?[key] = value;  // Update the user data on change
+                  user?[key] = value;
                 });
               },
             ),
           ),
-        );
-      } else {
-        fields.add(
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                labelText: _capitalize(key),
-                border: OutlineInputBorder(),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  user?[key] = value;  // Update the user data on change
-                });
-              },
-            ),
-          ),
-        );
-      }
+        ),
+      );
     });
 
-    // Add the profile image section in the requested format
+    // Add the profile image section
     fields.add(
       Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Container(
-          width: double.infinity,
           margin: EdgeInsets.symmetric(horizontal: 20),
           padding: EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Colors.white.withOpacity(0.9),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: Colors.grey),
           ),
           child: Row(
             children: [
-              // Display the profile image or a default icon if the image is not set
               _imagePath != null
                   ? CircleAvatar(
                       radius: 30,

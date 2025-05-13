@@ -108,21 +108,28 @@ class _HealthGuidancePageState extends State<HealthGuidancePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Health Guidance"),
-        backgroundColor: Colors.blue.shade800,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
         elevation: 0,
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade50, Colors.blue.shade200],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+      body: Column(
+        children: [
+          // Horizontal line separator
+          Container(
+            height: 1,
+            color: Colors.grey.shade400,
+            margin: const EdgeInsets.symmetric(horizontal: 16.0),
           ),
-        ),
-        child: Column(
-          children: [
-            Expanded(
+          // Main body content
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue.shade800, Colors.white],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -130,22 +137,29 @@ class _HealthGuidancePageState extends State<HealthGuidancePage> {
                   children: [
                     const Text(
                       "Search for Food Nutrition",
-                      style: TextStyle(fontSize: 18, color: Colors.blueGrey),
+                      style: TextStyle(fontSize: 18, color: Colors.black87),
                     ),
                     const SizedBox(height: 10),
-                    TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        border: const OutlineInputBorder(),
-                        filled: true,
-                        fillColor: Colors.white,
-                        hintText: "Enter food item (e.g., chicken, tofu)",
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.search),
-                          onPressed: () => _searchFoodItems(_searchController.text),
-                        ),
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey),
                       ),
-                      onSubmitted: _searchFoodItems,
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          hintText: "Enter food item (e.g., chicken, tofu)",
+                          suffixIcon: IconButton(
+                            icon: Icon(Icons.search, color: Colors.blue.shade600),
+                            onPressed: () => _searchFoodItems(_searchController.text),
+                          ),
+                        ),
+                        onSubmitted: _searchFoodItems,
+                      ),
                     ),
                     const SizedBox(height: 20),
                     if (_isLoading)
@@ -213,7 +227,7 @@ class _HealthGuidancePageState extends State<HealthGuidancePage> {
                       const Center(
                         child: Text(
                           "Search for a food item to see nutritional content.",
-                          style: TextStyle(color: Colors.blueGrey, fontSize: 16),
+                          style: TextStyle(color: Colors.black87, fontSize: 16),
                         ),
                       ),
                     const SizedBox(height: 20),
@@ -246,23 +260,23 @@ class _HealthGuidancePageState extends State<HealthGuidancePage> {
                 ),
               ),
             ),
-            Container(
-              color: Colors.white,
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: const Center(
-                child: Text(
-                  "Thriving Health, Vibrant Life Every Day",
-                  style: TextStyle(
-                    fontStyle: FontStyle.italic,
-                    color: Colors.blueGrey,
-                    fontSize: 14,
-                  ),
+          ),
+          Container(
+            color: Colors.white,
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: const Center(
+              child: Text(
+                "Thriving Health, Vibrant Life Every Day",
+                style: TextStyle(
+                  fontStyle: FontStyle.italic,
+                  color: Colors.blueGrey,
+                  fontSize: 14,
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

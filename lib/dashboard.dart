@@ -82,111 +82,155 @@ class _DashboardPageState extends State<DashboardPage> {
             Text(
               "Welcome, ${user['first_name']}!",
               style: const TextStyle(
-                color: Colors.white,
+                color: Colors.black87,
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ],
         ),
-        backgroundColor: Colors.blue.shade800,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
         elevation: 0,
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade50, Colors.blue.shade200],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              Expanded(
-                child: GridView.count(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 1.0,
-                  children: [
-                    _buildGridButton(
-                      context,
-                      "Information Storage",
-                      Icons.info_outline,
-                      InformationListPage(userEmail: user['email']),
-                    ),
-                    _buildGridButton(
-                      context,
-                      "Medication Reminder",
-                      Icons.alarm,
-                      MedicationReminderPage(userId: user['id']),
-                    ),
-                    _buildGridButton(
-                      context,
-                      "Log Medication",
-                      Icons.edit_note,
-                      LogMedicationPage(userId: user['id']),
-                    ),
-                    _buildGridButton(
-                      context,
-                      "Health Guidance",
-                      Icons.health_and_safety,
-                      HealthGuidancePage(userId: user['id']),
-                    ),
-                    _buildGridButton(
-                      context,
-                      "Appointments",
-                      Icons.calendar_today,
-                      AppointmentTrackingPage(userId: user['id']),
-                    ),
-                    _buildGridButton(
-                      context,
-                      "View Medicine Intake",
-                      Icons.view_list,
-                      ViewMedicationIntakePage(userId: user['id']),
-                    ),
-                    _buildGridButton(
-                      context,
-                      "View Appointment",
-                      Icons.event,
-                      ViewAppointmentPage(userId: user['id']),
-                    ),
-                    _buildGridButton(
-                      context,
-                      "View Progress",
-                      Icons.trending_up,
-                      ViewProgressPage(userId: user['id']),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => SignInPage()),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Background image
+          Positioned.fill(
+            child: Builder(
+              builder: (context) {
+                try {
+                  return Image.asset(
+                    'assets/images/bg.jpg',
+                    fit: BoxFit.contain,
+                    alignment: Alignment.center,
+                    errorBuilder: (context, error, stackTrace) {
+                      print('Asset loading error: $error\n$stackTrace');
+                      return Container(
+                        color: Colors.blue.shade50,
+                        child: Center(child: Text('Failed to load background image')),
+                      );
+                    },
                   );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red.shade600,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                } catch (e) {
+                  print('Exception loading asset: $e');
+                  return Container(
+                    color: Colors.blue.shade50,
+                    child: Center(child: Text('Exception loading background image')),
+                  );
+                }
+              },
+            ),
+          ),
+          // Semi-transparent overlay for readability
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withOpacity(0.3),
+            ),
+          ),
+          // Main body content
+          Column(
+            children: [
+              // Horizontal line separator
+              Container(
+                height: 1,
+                color: Colors.grey.shade400,
+                margin: const EdgeInsets.symmetric(horizontal: 16.0),
+              ),
+              // Content
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: GridView.count(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 1.0,
+                          children: [
+                            _buildGridButton(
+                              context,
+                              "Information Storage",
+                              Icons.info_outline,
+                              InformationListPage(userEmail: user['email']),
+                            ),
+                            _buildGridButton(
+                              context,
+                              "Medication Reminder",
+                              Icons.alarm,
+                              MedicationReminderPage(userId: user['id']),
+                            ),
+                            _buildGridButton(
+                              context,
+                              "Log Medication",
+                              Icons.edit_note,
+                              LogMedicationPage(userId: user['id']),
+                            ),
+                            _buildGridButton(
+                              context,
+                              "Health Guidance",
+                              Icons.health_and_safety,
+                              HealthGuidancePage(userId: user['id']),
+                            ),
+                            _buildGridButton(
+                              context,
+                              "Appointments",
+                              Icons.calendar_today,
+                              AppointmentTrackingPage(userId: user['id']),
+                            ),
+                            _buildGridButton(
+                              context,
+                              "View Medicine Intake",
+                              Icons.view_list,
+                              ViewMedicationIntakePage(userId: user['id']),
+                            ),
+                            _buildGridButton(
+                              context,
+                              "View Appointment",
+                              Icons.event,
+                              ViewAppointmentPage(userId: user['id']),
+                            ),
+                            _buildGridButton(
+                              context,
+                              "View Progress",
+                              Icons.trending_up,
+                              ViewProgressPage(userId: user['id']),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => SignInPage()),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.shade600,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2,
+                        ),
+                        child: const Text(
+                          "Logout",
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
                   ),
-                  elevation: 2,
-                ),
-                child: const Text(
-                  "Logout",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }

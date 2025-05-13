@@ -36,7 +36,6 @@ class _DiseaseDetailsPageState extends State<DiseaseDetailsPage> {
   }
 
   @override
-  @override
   void dispose() {
     _customDiseaseController.dispose();
     _medicationNameController.dispose();
@@ -46,14 +45,14 @@ class _DiseaseDetailsPageState extends State<DiseaseDetailsPage> {
     _prescriberController.dispose();
     super.dispose();
   }
-  
+
   Future<void> _loadDiseases() async {
     try {
       final diseases = await DatabaseHelper.instance.getAllDiseases();
       setState(() {
         _diseaseList = diseases.map((e) => e['name'] as String).toList();
         _diseaseList.add("Other");
-        
+
         if (!_diseaseList.contains(_selectedDisease)) {
           _selectedDisease = "Other";
         }
@@ -101,6 +100,15 @@ class _DiseaseDetailsPageState extends State<DiseaseDetailsPage> {
       return;
     }
 
+    // Validate dosage format (e.g., 1-p, 10-p)
+    final dosageRegex = RegExp(r'^\d+-p$');
+    if (!dosageRegex.hasMatch(_dosageController.text.trim())) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Dosage must be in the format 'number-p' (e.g., 1-p, 10-p)")),
+      );
+      return;
+    }
+
     await DatabaseHelper.instance.updateMedicationInfo(
       widget.info['id'],
       diseaseToSave,
@@ -121,111 +129,251 @@ class _DiseaseDetailsPageState extends State<DiseaseDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text('Disease Details'),
+        backgroundColor: Colors.blue.shade800.withOpacity(0.8),
+        foregroundColor: Colors.white,
+        elevation: 0,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            DropdownButtonFormField<String>(
-              value: _selectedDisease,
-              decoration: InputDecoration(
-                labelText: "Select Disease",
-                border: OutlineInputBorder(),
-              ),
-              items: _diseaseList.map((disease) {
-                return DropdownMenuItem(
-                  value: disease,
-                  child: Text(disease),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedDisease = value;
-                  if (value != "Other") {
-                    _customDiseaseController.text = value ?? '';
-                  }
-                });
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Fallback background color
+          Container(
+            color: Colors.blue.shade50,
+          ),
+          // Background image
+          Positioned.fill(
+            child: Builder(
+              builder: (context) {
+                try {
+                  return Image.asset(
+                    'assets/images/sss.jpg',
+                    fit: BoxFit.contain,
+                    alignment: Alignment.center,
+                    errorBuilder: (context, error, stackTrace) {
+                      print('Asset loading error: $error\n$stackTrace');
+                      return Container(
+                        color: Colors.blue.shade50,
+                        child: Center(child: Text('Failed to load background image')),
+                      );
+                    },
+                  );
+                } catch (e) {
+                  print('Exception loading asset: $e');
+                  return Container(
+                    color: Colors.blue.shade50,
+                    child: Center(child: Text('Exception loading background image')),
+                  );
+                }
               },
             ),
-            const SizedBox(height: 16),
-            if (_selectedDisease == "Other")
-              TextField(
-                controller: _customDiseaseController,
-                decoration: InputDecoration(
-                  labelText: "Enter Disease Name",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _medicationNameController,
-              decoration: InputDecoration(
-                labelText: "Medication Name",
-                border: OutlineInputBorder(),
-              ),
+          ),
+          // Semi-transparent overlay for readability
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withOpacity(0.3),
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _dosageController,
-              decoration: InputDecoration(
-                labelText: "Dosage",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _startDateController,
-              decoration: InputDecoration(
-                labelText: "Start Date (YYYY-MM-DD)",
-                border: OutlineInputBorder(),
-              ),
-              readOnly: true,
-              onTap: () => _selectDate(context, _startDateController),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _endDateController,
-              decoration: InputDecoration(
-                labelText: "End Date (YYYY-MM-DD)",
-                border: OutlineInputBorder(),
-              ),
-              readOnly: true,
-              onTap: () => _selectDate(context, _endDateController),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _prescriberController,
-              decoration: InputDecoration(
-                labelText: "Prescriber",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueGrey,
+          ),
+          // Content
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  // Horizontal line separator
+                  Container(
+                    height: 1,
+                    color: Colors.grey.shade400,
+                    margin: const EdgeInsets.symmetric(horizontal: 16.0),
                   ),
-                  child: Text(
-                    "Return to Information List",
-                    style: TextStyle(color: Colors.white),
+                  SizedBox(height: 16),
+                  // Disease dropdown
+                  Container(
+                    margin: EdgeInsets.symmetric(horizontal: 20),
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey),
+                    ),
+                    child: DropdownButtonFormField<String>(
+                      value: _selectedDisease,
+                      decoration: InputDecoration(
+                        labelText: "Select Disease",
+                        border: InputBorder.none,
+                      ),
+                      items: _diseaseList.map((disease) {
+                        return DropdownMenuItem(
+                          value: disease,
+                          child: Text(disease),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedDisease = value;
+                          if (value != "Other") {
+                            _customDiseaseController.text = value ?? '';
+                          }
+                        });
+                      },
+                    ),
                   ),
-                ),
-                ElevatedButton(
-                  onPressed: _saveChanges,
-                  child: Text("Save Changes"),
-                ),
-              ],
+                  if (_selectedDisease == "Other") ...[
+                    SizedBox(height: 16),
+                    Container(
+                      margin: EdgeInsets.symmetric(horizontal: 20),
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey),
+                      ),
+                      child: TextField(
+                        controller: _customDiseaseController,
+                        decoration: InputDecoration(
+                          labelText: "Enter Disease Name",
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
+                  ],
+                  SizedBox(height: 16),
+                  Container(
+                    margin: EdgeInsets.symmetric(horizontal: 20),
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey),
+                    ),
+                    child: TextField(
+                      controller: _medicationNameController,
+                      decoration: InputDecoration(
+                        labelText: "Medication Name",
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Container(
+                    margin: EdgeInsets.symmetric(horizontal: 20),
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey),
+                    ),
+                    child: TextField(
+                      controller: _dosageController,
+                      decoration: InputDecoration(
+                        labelText: "Dosage",
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Container(
+                    margin: EdgeInsets.symmetric(horizontal: 20),
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey),
+                    ),
+                    child: TextField(
+                      controller: _startDateController,
+                      decoration: InputDecoration(
+                        labelText: "Start Date (YYYY-MM-DD)",
+                        border: InputBorder.none,
+                      ),
+                      readOnly: true,
+                      onTap: () => _selectDate(context, _startDateController),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Container(
+                    margin: EdgeInsets.symmetric(horizontal: 20),
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey),
+                    ),
+                    child: TextField(
+                      controller: _endDateController,
+                      decoration: InputDecoration(
+                        labelText: "End Date (YYYY-MM-DD)",
+                        border: InputBorder.none,
+                      ),
+                      readOnly: true,
+                      onTap: () => _selectDate(context, _endDateController),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Container(
+                    margin: EdgeInsets.symmetric(horizontal: 20),
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey),
+                    ),
+                    child: TextField(
+                      controller: _prescriberController,
+                      decoration: InputDecoration(
+                        labelText: "Prescriber",
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: ElevatedButton(
+                        onPressed: _saveChanges,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue.shade600,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: Text("Save Changes"),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue.shade600,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: Text("Return to Information List"),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 40),
+                  Text(
+                    "Thriving Health, Vibrant Life Every Day",
+                    style: TextStyle(
+                      fontStyle: FontStyle.italic,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

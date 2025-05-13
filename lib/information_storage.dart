@@ -79,15 +79,24 @@ class _InformationStoragePageState extends State<InformationStoragePage> {
   }
 
   Widget _buildDatePicker(String label, TextEditingController controller) {
-    return TextField(
-      controller: controller,
-      readOnly: true,
-      decoration: InputDecoration(
-        labelText: label,
-        suffixIcon: Icon(Icons.calendar_today),
-        border: OutlineInputBorder(),
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey),
       ),
-      onTap: () => _selectDate(controller),
+      child: TextField(
+        controller: controller,
+        readOnly: true,
+        decoration: InputDecoration(
+          labelText: label,
+          suffixIcon: Icon(Icons.calendar_today, color: Colors.blue.shade600),
+          border: InputBorder.none,
+        ),
+        onTap: () => _selectDate(controller),
+      ),
     );
   }
 
@@ -99,7 +108,14 @@ class _InformationStoragePageState extends State<InformationStoragePage> {
         content: Text("Are you sure you want to save this information?"),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: Text("Cancel")),
-          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: Text("Save")),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue.shade600,
+              foregroundColor: Colors.white,
+            ),
+            child: Text("Save"),
+          ),
         ],
       ),
     );
@@ -137,14 +153,18 @@ class _InformationStoragePageState extends State<InformationStoragePage> {
       return;
     }
 
-    // Validate dosage format
-    final dosageLower = _dosageController.text.trim().toLowerCase();
-    if (!dosageLower.contains(RegExp(r'\d+\s*(mg|tablet|capsule).*times.*(daily|per day)', caseSensitive: false)) &&
-        !dosageLower.contains('twice') &&
-        !dosageLower.contains('thrice') &&
-        !RegExp(r'^\d+$').hasMatch(dosageLower)) {
+    // Validate dosage: must be numeric and between 1-9
+    final dosage = _dosageController.text.trim();
+    if (!RegExp(r'^\d+$').hasMatch(dosage)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Invalid dosage format')),
+        SnackBar(content: Text("Dosage must be a numeric value")),
+      );
+      return;
+    }
+    final dosageValue = int.parse(dosage);
+    if (dosageValue < 1 || dosageValue > 9) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Dosage must be between 1 and 9")),
       );
       return;
     }
@@ -182,80 +202,167 @@ class _InformationStoragePageState extends State<InformationStoragePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Add Medication Info")),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            DropdownButtonFormField<String>(
-              value: _selectedDisease,
-              decoration: InputDecoration(
-                labelText: "Select Disease",
-                border: OutlineInputBorder(),
-              ),
-              items: _diseaseList.map((disease) {
-                return DropdownMenuItem(
-                  value: disease,
-                  child: Text(disease),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedDisease = value;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-            if (_selectedDisease == "Other")
-              TextField(
-                controller: _customDiseaseController,
-                decoration: InputDecoration(
-                  labelText: "Enter Disease Name",
-                  border: OutlineInputBorder(),
+      appBar: AppBar(
+        title: Text("Add Medication Info"),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 0,
+      ),
+      body: Column(
+        children: [
+          // Horizontal line separator
+          Container(
+            height: 1,
+            color: Colors.grey.shade400,
+            margin: const EdgeInsets.symmetric(horizontal: 16.0),
+          ),
+          // Main body content
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue.shade800, Colors.white],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
               ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _medicationNameController,
-              decoration: InputDecoration(
-                labelText: "Medication Name",
-                border: OutlineInputBorder(),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    Container(
+                      margin: EdgeInsets.symmetric(horizontal: 20),
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey),
+                      ),
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedDisease,
+                        decoration: InputDecoration(
+                          labelText: "Select Disease",
+                          border: InputBorder.none,
+                        ),
+                        items: _diseaseList.map((disease) {
+                          return DropdownMenuItem(
+                            value: disease,
+                            child: Text(disease),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedDisease = value;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    if (_selectedDisease == "Other")
+                      Container(
+                        margin: EdgeInsets.symmetric(horizontal: 20),
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey),
+                        ),
+                        child: TextField(
+                          controller: _customDiseaseController,
+                          decoration: InputDecoration(
+                            labelText: "Enter Disease Name",
+                            border: InputBorder.none,
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 16),
+                    Container(
+                      margin: EdgeInsets.symmetric(horizontal: 20),
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey),
+                      ),
+                      child: TextField(
+                        controller: _medicationNameController,
+                        decoration: InputDecoration(
+                          labelText: "Medication Name",
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      margin: EdgeInsets.symmetric(horizontal: 20),
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey),
+                      ),
+                      child: TextField(
+                        controller: _dosageController,
+                        decoration: InputDecoration(
+                          labelText: "Dosage (1-9)",
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildDatePicker("Start Date (YYYY-MM-DD)", _startDateController),
+                    const SizedBox(height: 16),
+                    _buildDatePicker("End Date (YYYY-MM-DD)", _endDateController),
+                    const SizedBox(height: 16),
+                    Container(
+                      margin: EdgeInsets.symmetric(horizontal: 20),
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey),
+                      ),
+                      child: TextField(
+                        controller: _prescriberController,
+                        decoration: InputDecoration(
+                          labelText: "Prescriber",
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: _confirmAndSave,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade600,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      ),
+                      child: Text("Save"),
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => InformationListPage(userEmail: widget.userEmail),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blueGrey,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      ),
+                      child: Text("View My Disease List"),
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _dosageController,
-              decoration: InputDecoration(
-                labelText: "Dosage",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildDatePicker("Start Date (YYYY-MM-DD)", _startDateController),
-            const SizedBox(height: 16),
-            _buildDatePicker("End Date (YYYY-MM-DD)", _endDateController),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _prescriberController,
-              decoration: InputDecoration(
-                labelText: "Prescriber",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _confirmAndSave,
-              child: Text("Save"),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text("View My Disease List"),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

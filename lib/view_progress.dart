@@ -255,13 +255,7 @@ class _ViewProgressPageState extends State<ViewProgressPage> {
         elevation: 0,
       ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade50, Colors.blue.shade200],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+        color: Colors.white, // Changed to plain white background
         child: Column(
           children: [
             Expanded(

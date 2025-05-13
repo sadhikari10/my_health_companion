@@ -118,28 +118,29 @@ class _ViewAppointmentPageState extends State<ViewAppointmentPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('View Appointments'),
-        backgroundColor: Colors.blue.shade800,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
         elevation: 0,
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade50, Colors.blue.shade200],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+      body: Column(
+        children: [
+          // Horizontal line separator
+          Container(
+            height: 1,
+            color: Colors.grey.shade400,
+            margin: const EdgeInsets.symmetric(horizontal: 16.0),
           ),
-        ),
-        child: Column(
-          children: [
-            Expanded(
+          // Main body content
+          Expanded(
+            child: Container(
+              color: Colors.white,
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _appointments.isEmpty
                       ? const Center(
                           child: Text(
                             'No appointments found. Add some in the Appointments page.',
-                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                            style: TextStyle(fontSize: 16, color: Colors.black87),
                             textAlign: TextAlign.center,
                           ),
                         )
@@ -244,15 +245,15 @@ class _ViewAppointmentPageState extends State<ViewAppointmentPage> {
                                                     const SizedBox(height: 8),
                                                     Text(
                                                       'Date: ${mapEvent['appointment_date']}',
-                                                      style: const TextStyle(fontSize: 14),
+                                                      style: const TextStyle(fontSize: 14, color: Colors.black87),
                                                     ),
                                                     Text(
                                                       'Time: ${mapEvent['appointment_time']}',
-                                                      style: const TextStyle(fontSize: 14),
+                                                      style: const TextStyle(fontSize: 14, color: Colors.black87),
                                                     ),
                                                     Text(
                                                       'Day: ${mapEvent['appointment_day']}',
-                                                      style: const TextStyle(fontSize: 14),
+                                                      style: const TextStyle(fontSize: 14, color: Colors.black87),
                                                     ),
                                                   ],
                                                 ),
@@ -297,7 +298,7 @@ class _ViewAppointmentPageState extends State<ViewAppointmentPage> {
                                     elevation: 2,
                                   ),
                                   child: const Text(
-                                    'Return to Homepage',
+                                    'Return to Dashboard',
                                     style: TextStyle(fontSize: 16),
                                   ),
                                 ),
@@ -306,42 +307,23 @@ class _ViewAppointmentPageState extends State<ViewAppointmentPage> {
                           ),
                         ),
             ),
-            Container(
-              color: Colors.white,
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: const Center(
-                child: Text(
-                  'Thriving Health, Vibrant Life Every Day',
-                  style: TextStyle(
-                    fontStyle: FontStyle.italic,
-                    color: Colors.blueGrey,
-                    fontSize: 14,
-                  ),
+          ),
+          Container(
+            color: Colors.white,
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: const Center(
+              child: Text(
+                'Thriving Health, Vibrant Life Every Day',
+                style: TextStyle(
+                  fontStyle: FontStyle.italic,
+                  color: Colors.blueGrey,
+                  fontSize: 14,
                 ),
               ),
             ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final user = await DatabaseHelper.instance.getUserById(widget.userId);
-          if (user != null) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => DashboardPage(user: user),
-              ),
-            );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error: User not found')),
-            );
-          }
-        },
-        backgroundColor: Colors.blue.shade600,
-        child: const Icon(Icons.arrow_back),
+          ),
+        ],
       ),
     );
   }
