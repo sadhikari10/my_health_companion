@@ -176,7 +176,7 @@ class _ChangeInformationPageState extends State<ChangeInformationPage> {
               builder: (context) {
                 try {
                   return Image.asset(
-                    'assets/images/sss.jpg',
+                    'assets/images/sss.png',
                     fit: BoxFit.contain,
                     alignment: Alignment.center,
                     errorBuilder: (context, error, stackTrace) {
