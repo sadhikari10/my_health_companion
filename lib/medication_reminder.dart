@@ -589,143 +589,199 @@ class _MedicationReminderPageState extends State<MedicationReminderPage> with Wi
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent, // Transparent to show background
+      extendBodyBehindAppBar: true, // Extend image under AppBar
       appBar: AppBar(
         title: const Text('Medication Reminders'),
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.white, // White background
         foregroundColor: Colors.black87,
         elevation: 0,
       ),
-      body: Column(
+      body: Stack(
+        fit: StackFit.expand, // Ensure Stack fills entire screen
         children: [
-          // Horizontal line separator
+          // Fallback background color
           Container(
-            height: 1,
-            color: Colors.grey.shade400,
-            margin: const EdgeInsets.symmetric(horizontal: 16.0),
+            color: Colors.blue.shade50, // Matches app theme
           ),
-          // Main body content
-          Expanded(
+          // Background image
+          Positioned.fill(
+            child: Builder(
+              builder: (context) {
+                try {
+                  return Image.asset(
+                    'assets/images/medical_image.jpg',
+                    fit: BoxFit.cover, // Fill entire screen, may crop
+                    alignment: Alignment.center,
+                    width: MediaQuery.of(context).size.width,
+                    height: MediaQuery.of(context).size.height,
+                    errorBuilder: (context, error, stackTrace) {
+                      print('Asset loading error: $error\n$stackTrace');
+                      return Container(
+                        color: Colors.blue.shade50,
+                        child: Center(child: Text('Failed to load background image')),
+                      );
+                    },
+                  );
+                } catch (e) {
+                  print('Exception loading asset: $e');
+                  return Container(
+                    color: Colors.blue.shade50,
+                    child: Center(child: Text('Exception loading background image')),
+                  );
+                }
+              },
+            ),
+          ),
+          // Semi-transparent overlay for readability
+          Positioned.fill(
             child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blue.shade800, Colors.white],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+              color: Colors.black.withOpacity(0.3), // Adjust opacity
+            ),
+          ),
+          // Content
+          SafeArea(
+            child: Column(
+              children: [
+                // Horizontal line separator
+                Container(
+                  height: 1,
+                  color: Colors.grey.shade400,
+                  margin: const EdgeInsets.symmetric(horizontal: 16.0),
                 ),
-              ),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: _isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : _medications.isEmpty
-                            ? const Center(
-                                child: Text(
-                                  'No medications found. Add from Information Storage Page.',
-                                  style: TextStyle(fontSize: 16, color: Colors.black87),
-                                  textAlign: TextAlign.center,
-                                ),
-                              )
-                            : ListView.builder(
-                                itemCount: _medications.length,
-                                itemBuilder: (context, index) {
-                                  final medication = _medications[index];
-                                  final medicationReminders = _reminders
-                                      .where((r) => r['disease_name'] == medication['disease_name'])
-                                      .toList();
-                                  return Card(
-                                    elevation: 2,
-                                    margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(16.0),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            medication['disease_name'],
-                                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.blueGrey),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text('Medication: ${medication['medication_name']}', style: const TextStyle(color: Colors.blueGrey)),
-                                          Text('Dosage: ${medication['dosage']}', style: const TextStyle(color: Colors.blueGrey)),
-                                          const SizedBox(height: 8),
-                                          if (medicationReminders.isNotEmpty)
-                                            Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                const Text('Reminders:', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w500)),
-                                                ...medicationReminders.map((reminder) => Row(
-                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                      children: [
-                                                        Text(
-                                                          reminder['reminder_time'],
-                                                          style: const TextStyle(color: Colors.blue),
-                                                        ),
-                                                        IconButton(
-                                                          icon: const Icon(Icons.delete, color: Colors.red),
-                                                          onPressed: () => _deleteReminder(reminder['id'], reminder['disease_name']),
-                                                        ),
-                                                      ],
-                                                    )),
-                                              ],
-                                            ),
-                                          const SizedBox(height: 8),
-                                          ElevatedButton(
-                                            onPressed: () => _setReminder(medication),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.blue.shade600,
-                                              foregroundColor: Colors.white,
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                            ),
-                                            child: const Text('Add Reminder'),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                  ),
-                  Padding(
+                // Main content
+                Expanded(
+                  child: SingleChildScrollView(
                     padding: const EdgeInsets.all(16.0),
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        final user = await DatabaseHelper.instance.getUserById(widget.userId);
-                        if (user != null) {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => DashboardPage(user: user)),
-                          );
-                        } else {
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: User not found')));
-                          }
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue.shade600,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 2,
-                      ),
-                      child: const Text('Return to Dashboard', style: TextStyle(fontSize: 16)),
+                    child: Column(
+                      children: [
+                        _isLoading
+                            ? const Center(child: CircularProgressIndicator())
+                            : _medications.isEmpty
+                                ? const Center(
+                                    child: Text(
+                                      'No medications found. Add from Information Storage Page.',
+                                      style: TextStyle(fontSize: 16, color: Colors.white),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    itemCount: _medications.length,
+                                    itemBuilder: (context, index) {
+                                      final medication = _medications[index];
+                                      final medicationReminders = _reminders
+                                          .where((r) => r['disease_name'] == medication['disease_name'])
+                                          .toList();
+                                      return Card(
+                                        color: Colors.white.withOpacity(0.9), // Semi-transparent
+                                        elevation: 2,
+                                        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                medication['disease_name'],
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.black87,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                'Medication: ${medication['medication_name']}',
+                                                style: const TextStyle(color: Colors.black54),
+                                              ),
+                                              Text(
+                                                'Dosage: ${medication['dosage']}',
+                                                style: const TextStyle(color: Colors.black54),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              if (medicationReminders.isNotEmpty)
+                                                Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    const Text(
+                                                      'Reminders:',
+                                                      style: TextStyle(
+                                                        color: Colors.blue,
+                                                        fontWeight: FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                    ...medicationReminders.map((reminder) => Row(
+                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                          children: [
+                                                            Text(
+                                                              reminder['reminder_time'],
+                                                              style: const TextStyle(color: Colors.blue),
+                                                            ),
+                                                            IconButton(
+                                                              icon: const Icon(Icons.delete, color: Colors.red),
+                                                              onPressed: () => _deleteReminder(
+                                                                reminder['id'],
+                                                                reminder['disease_name'],
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        )),
+                                                  ],
+                                                ),
+                                              const SizedBox(height: 8),
+                                              ElevatedButton(
+                                                onPressed: () => _setReminder(medication),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors.blue.shade600,
+                                                  foregroundColor: Colors.white,
+                                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                                ),
+                                                child: const Text('Add Reminder'),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                        const SizedBox(height: 16),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              final user = await DatabaseHelper.instance.getUserById(widget.userId);
+                              if (user != null) {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => DashboardPage(user: user)),
+                                );
+                              } else {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Error: User not found')),
+                                  );
+                                }
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blueGrey,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              elevation: 2,
+                            ),
+                            child: const Text('Return to Dashboard', style: TextStyle(fontSize: 16)),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  Container(
-                    color: Colors.white,
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: const Center(
-                      child: Text(
-                        'Thriving Health, Vibrant Life Every Day',
-                        style: TextStyle(fontStyle: FontStyle.italic, color: Colors.blueGrey, fontSize: 14),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],

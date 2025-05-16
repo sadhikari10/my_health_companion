@@ -52,57 +52,88 @@ class _DashboardPageState extends State<DashboardPage> {
     final String? profileImagePath = user['profile_image'];
 
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            GestureDetector(
-              onTap: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChangeInformationPage(userId: user['id']),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(80), // Reduced height for better spacing
+        child: AppBar(
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Image.asset(
+                'assets/images/logo.png',
+                height: 32, // Smaller logo to prevent crowding
+                errorBuilder: (context, error, stackTrace) {
+                  print('Logo loading error: $error\n$stackTrace');
+                  return Icon(Icons.broken_image, color: Colors.grey[700], size: 32);
+                },
+              ),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChangeInformationPage(userId: user['id']),
+                        ),
+                      );
+                      if (result != null) {
+                        await _refreshUser();
+                      }
+                    },
+                    child: Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        CircleAvatar(
+                          backgroundImage: profileImagePath != null && File(profileImagePath).existsSync()
+                              ? FileImage(File(profileImagePath))
+                              : null,
+                          backgroundColor: profileImagePath == null ? Colors.grey[300] : null,
+                          radius: 16, // Smaller avatar
+                          child: profileImagePath == null
+                              ? Icon(Icons.person, color: Colors.grey[700], size: 20)
+                              : null,
+                        ),
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 1),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                );
-                if (result != null) {
-                  await _refreshUser();
-                }
-              },
-              child: CircleAvatar(
-                backgroundImage: profileImagePath != null && File(profileImagePath).existsSync()
-                    ? FileImage(File(profileImagePath))
-                    : null,
-                backgroundColor: profileImagePath == null ? Colors.grey[300] : null,
-                radius: 20,
-                child: profileImagePath == null
-                    ? Icon(Icons.person, color: Colors.grey[700], size: 24)
-                    : null,
+                  const SizedBox(width: 8),
+                  Text(
+                    "Welcome, ${user['first_name']}!",
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              "Welcome, ${user['first_name']}!",
-              style: const TextStyle(
-                color: Colors.black87,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
+            ],
+          ),
+          centerTitle: false,
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black87,
+          elevation: 0,
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 0,
       ),
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background image
           Positioned.fill(
             child: Builder(
               builder: (context) {
                 try {
                   return Image.asset(
-                    'assets/images/bg.jpg',
+                    'assets/images/medical_image.jpg',
                     fit: BoxFit.contain,
                     alignment: Alignment.center,
                     errorBuilder: (context, error, stackTrace) {
@@ -123,22 +154,18 @@ class _DashboardPageState extends State<DashboardPage> {
               },
             ),
           ),
-          // Semi-transparent overlay for readability
           Positioned.fill(
             child: Container(
               color: Colors.black.withOpacity(0.3),
             ),
           ),
-          // Main body content
           Column(
             children: [
-              // Horizontal line separator
               Container(
                 height: 1,
                 color: Colors.grey.shade400,
                 margin: const EdgeInsets.symmetric(horizontal: 16.0),
               ),
-              // Content
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -203,27 +230,32 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => SignInPage()),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red.shade600,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (context) => SignInPage()),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red.shade600,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 2,
+                            minimumSize: const Size(double.infinity, 48), // Full-width button
                           ),
-                          elevation: 2,
-                        ),
-                        child: const Text(
-                          "Logout",
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                          child: const Text(
+                            "Logout",
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                          ),
                         ),
                       ),
+                      const SizedBox(height: 16),
                     ],
                   ),
                 ),
@@ -262,7 +294,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 icon,
                 size: 40,
                 color: Colors.white,
-              ),
+                ),
               const SizedBox(height: 8),
               Text(
                 title,

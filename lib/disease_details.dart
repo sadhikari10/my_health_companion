@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:my_health_companion/database.dart';
 
@@ -100,11 +101,19 @@ class _DiseaseDetailsPageState extends State<DiseaseDetailsPage> {
       return;
     }
 
-    // Validate dosage format (e.g., 1-p, 10-p)
-    final dosageRegex = RegExp(r'^\d+-p$');
-    if (!dosageRegex.hasMatch(_dosageController.text.trim())) {
+    // Validate dosage is a positive integer
+    final dosageText = _dosageController.text.trim();
+    try {
+      final dosage = int.parse(dosageText);
+      if (dosage <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Dosage must be a positive number")),
+        );
+        return;
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Dosage must be in the format 'number-p' (e.g., 1-p, 10-p)")),
+        SnackBar(content: Text("Dosage must be a valid number")),
       );
       return;
     }
@@ -113,7 +122,7 @@ class _DiseaseDetailsPageState extends State<DiseaseDetailsPage> {
       widget.info['id'],
       diseaseToSave,
       _medicationNameController.text.trim(),
-      _dosageController.text.trim(),
+      dosageText,
       _startDateController.text.trim().isEmpty ? null : _startDateController.text.trim(),
       _endDateController.text.trim().isEmpty ? null : _endDateController.text.trim(),
       _prescriberController.text.trim().isEmpty ? null : _prescriberController.text.trim(),
@@ -129,20 +138,20 @@ class _DiseaseDetailsPageState extends State<DiseaseDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent, // Transparent to show background
+      extendBodyBehindAppBar: true, // Extend image under AppBar
       appBar: AppBar(
-        title: Text('Disease Details'),
-        backgroundColor: Colors.blue.shade800.withOpacity(0.8),
-        foregroundColor: Colors.white,
+        title: const Text('Disease Details'),
+        backgroundColor: Colors.white, // White background
+        foregroundColor: Colors.black87,
         elevation: 0,
       ),
       body: Stack(
-        fit: StackFit.expand,
+        fit: StackFit.expand, // Ensure Stack fills entire screen
         children: [
           // Fallback background color
           Container(
-            color: Colors.blue.shade50,
+            color: Colors.blue.shade50, // Matches app theme
           ),
           // Background image
           Positioned.fill(
@@ -150,9 +159,11 @@ class _DiseaseDetailsPageState extends State<DiseaseDetailsPage> {
               builder: (context) {
                 try {
                   return Image.asset(
-                    'assets/images/sss.jpg',
-                    fit: BoxFit.contain,
+                    'assets/images/medical_image.jpg',
+                    fit: BoxFit.cover, // Fill entire screen, may crop
                     alignment: Alignment.center,
+                    width: MediaQuery.of(context).size.width,
+                    height: MediaQuery.of(context).size.height,
                     errorBuilder: (context, error, stackTrace) {
                       print('Asset loading error: $error\n$stackTrace');
                       return Container(
@@ -174,7 +185,7 @@ class _DiseaseDetailsPageState extends State<DiseaseDetailsPage> {
           // Semi-transparent overlay for readability
           Positioned.fill(
             child: Container(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withOpacity(0.3), // Adjust opacity
             ),
           ),
           // Content
@@ -189,19 +200,19 @@ class _DiseaseDetailsPageState extends State<DiseaseDetailsPage> {
                     color: Colors.grey.shade400,
                     margin: const EdgeInsets.symmetric(horizontal: 16.0),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   // Disease dropdown
                   Container(
-                    margin: EdgeInsets.symmetric(horizontal: 20),
-                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withOpacity(0.9), // Semi-transparent
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: Colors.grey),
                     ),
                     child: DropdownButtonFormField<String>(
                       value: _selectedDisease,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: "Select Disease",
                         border: InputBorder.none,
                       ),
@@ -222,70 +233,72 @@ class _DiseaseDetailsPageState extends State<DiseaseDetailsPage> {
                     ),
                   ),
                   if (_selectedDisease == "Other") ...[
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     Container(
-                      margin: EdgeInsets.symmetric(horizontal: 20),
-                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withOpacity(0.9), // Semi-transparent
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: Colors.grey),
                       ),
                       child: TextField(
                         controller: _customDiseaseController,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: "Enter Disease Name",
                           border: InputBorder.none,
                         ),
                       ),
                     ),
                   ],
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Container(
-                    margin: EdgeInsets.symmetric(horizontal: 20),
-                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withOpacity(0.9), // Semi-transparent
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: Colors.grey),
                     ),
                     child: TextField(
                       controller: _medicationNameController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: "Medication Name",
                         border: InputBorder.none,
                       ),
                     ),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Container(
-                    margin: EdgeInsets.symmetric(horizontal: 20),
-                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withOpacity(0.9), // Semi-transparent
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: Colors.grey),
                     ),
                     child: TextField(
                       controller: _dosageController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: "Dosage",
                         border: InputBorder.none,
                       ),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     ),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Container(
-                    margin: EdgeInsets.symmetric(horizontal: 20),
-                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withOpacity(0.9), // Semi-transparent
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: Colors.grey),
                     ),
                     child: TextField(
                       controller: _startDateController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: "Start Date (YYYY-MM-DD)",
                         border: InputBorder.none,
                       ),
@@ -293,18 +306,18 @@ class _DiseaseDetailsPageState extends State<DiseaseDetailsPage> {
                       onTap: () => _selectDate(context, _startDateController),
                     ),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Container(
-                    margin: EdgeInsets.symmetric(horizontal: 20),
-                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withOpacity(0.9), // Semi-transparent
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: Colors.grey),
                     ),
                     child: TextField(
                       controller: _endDateController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: "End Date (YYYY-MM-DD)",
                         border: InputBorder.none,
                       ),
@@ -312,57 +325,59 @@ class _DiseaseDetailsPageState extends State<DiseaseDetailsPage> {
                       onTap: () => _selectDate(context, _endDateController),
                     ),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Container(
-                    margin: EdgeInsets.symmetric(horizontal: 20),
-                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withOpacity(0.9), // Semi-transparent
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: Colors.grey),
                     ),
                     child: TextField(
                       controller: _prescriberController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: "Prescriber",
                         border: InputBorder.none,
                       ),
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: ElevatedButton(
                         onPressed: _saveChanges,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue.shade600,
                           foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                         ),
-                        child: Text("Save Changes"),
+                        child: const Text("Save Changes"),
                       ),
                     ),
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: ElevatedButton(
                         onPressed: () {
                           Navigator.pop(context);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue.shade600,
+                          backgroundColor: Colors.blueGrey,
                           foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                         ),
-                        child: Text("Return to Information List"),
+                        child: const Text("Return to Information List"),
                       ),
                     ),
                   ),
-                  SizedBox(height: 40),
-                  Text(
+                  const SizedBox(height: 40),
+                  const Text(
                     "Thriving Health, Vibrant Life Every Day",
                     style: TextStyle(
                       fontStyle: FontStyle.italic,

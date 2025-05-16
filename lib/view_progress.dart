@@ -89,7 +89,7 @@ class _ViewProgressPageState extends State<ViewProgressPage> {
       return Center(
         child: Text(
           'No medication logs found for the $timeFrameLabel.',
-          style: const TextStyle(fontSize: 16, color: Colors.blueGrey),
+          style: const TextStyle(fontSize: 16, color: Colors.white),
           textAlign: TextAlign.center,
         ),
       );
@@ -107,120 +107,127 @@ class _ViewProgressPageState extends State<ViewProgressPage> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-      child: Column(
-        children: [
-          Text(
-            'Medication Adherence ($timeFrameLabel)',
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.blueGrey,
-            ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 300,
-            child: BarChart(
-              BarChartData(
-                alignment: BarChartAlignment.spaceAround,
-                maxY: maxY + 1,
-                barTouchData: BarTouchData(
-                  enabled: true,
-                  touchTooltipData: BarTouchTooltipData(
-                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                      final disease = diseases[groupIndex];
-                      final status = rodIndex == 0 ? 'Taken' : 'Missed';
-                      return BarTooltipItem(
-                        '$status: ${rod.toY.toInt()}',
-                        const TextStyle(color: Colors.white),
-                      );
-                    },
-                  ),
-                ),
-                titlesData: FlTitlesData(
-                  show: true,
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      getTitlesWidget: (value, meta) {
-                        final index = value.toInt();
-                        if (index >= 0 && index < diseases.length) {
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(
-                              diseases[index],
-                              style: const TextStyle(
-                                color: Colors.blueGrey,
-                                fontSize: 12,
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                            ),
-                          );
-                        }
-                        return const Text('');
-                      },
-                      reservedSize: 40,
-                    ),
-                  ),
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      getTitlesWidget: (value, meta) {
-                        return Text(
-                          value.toInt().toString(),
-                          style: const TextStyle(
-                            color: Colors.blueGrey,
-                            fontSize: 12,
-                          ),
-                        );
-                      },
-                      reservedSize: 30,
-                    ),
-                  ),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                ),
-                gridData: const FlGridData(show: true),
-                borderData: FlBorderData(show: false),
-                barGroups: List.generate(
-                  diseases.length,
-                  (index) {
-                    final stats = diseaseStats[diseases[index]]!;
-                    print('Rendering bars for ${diseases[index]}: taken=${stats['taken']}, missed=${stats['missed']}');
-                    return BarChartGroupData(
-                      x: index,
-                      barRods: [
-                        BarChartRodData(
-                          toY: stats['taken']!.toDouble(),
-                          color: Colors.green.shade600,
-                          width: 20,
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-                        ),
-                        BarChartRodData(
-                          toY: stats['missed']!.toDouble(),
-                          color: Colors.red.shade600,
-                          width: 20,
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-                        ),
-                      ],
-                      showingTooltipIndicators: [0, 1],
-                    );
-                  },
+      child: Card(
+        color: Colors.white.withOpacity(0.9),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              Text(
+                'Medication Adherence ($timeFrameLabel)',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
                 ),
               ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildLegend(color: Colors.green.shade600, label: 'Taken'),
-              const SizedBox(width: 16),
-              _buildLegend(color: Colors.red.shade600, label: 'Missed'),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 300,
+                child: BarChart(
+                  BarChartData(
+                    alignment: BarChartAlignment.spaceAround,
+                    maxY: maxY + 1,
+                    barTouchData: BarTouchData(
+                      enabled: true,
+                      touchTooltipData: BarTouchTooltipData(
+                        getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                          final disease = diseases[groupIndex];
+                          final status = rodIndex == 0 ? 'Taken' : 'Missed';
+                          return BarTooltipItem(
+                            '$status: ${rod.toY.toInt()}',
+                            const TextStyle(color: Colors.white),
+                          );
+                        },
+                      ),
+                    ),
+                    titlesData: FlTitlesData(
+                      show: true,
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          getTitlesWidget: (value, meta) {
+                            final index = value.toInt();
+                            if (index >= 0 && index < diseases.length) {
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: Text(
+                                  diseases[index],
+                                  style: const TextStyle(
+                                    color: Colors.black54,
+                                    fontSize: 12,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                ),
+                              );
+                            }
+                            return const Text('');
+                          },
+                          reservedSize: 40,
+                        ),
+                      ),
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          getTitlesWidget: (value, meta) {
+                            return Text(
+                              value.toInt().toString(),
+                              style: const TextStyle(
+                                color: Colors.black54,
+                                fontSize: 12,
+                              ),
+                            );
+                          },
+                          reservedSize: 30,
+                        ),
+                      ),
+                      topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    ),
+                    gridData: const FlGridData(show: true),
+                    borderData: FlBorderData(show: false),
+                    barGroups: List.generate(
+                      diseases.length,
+                      (index) {
+                        final stats = diseaseStats[diseases[index]]!;
+                        print('Rendering bars for ${diseases[index]}: taken=${stats['taken']}, missed=${stats['missed']}');
+                        return BarChartGroupData(
+                          x: index,
+                          barRods: [
+                            BarChartRodData(
+                              toY: stats['taken']!.toDouble(),
+                              color: Colors.green.shade600,
+                              width: 20,
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                            ),
+                            BarChartRodData(
+                              toY: stats['missed']!.toDouble(),
+                              color: Colors.red.shade600,
+                              width: 20,
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                            ),
+                          ],
+                          showingTooltipIndicators: [0, 1],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildLegend(color: Colors.green.shade600, label: 'Taken'),
+                  const SizedBox(width: 16),
+                  _buildLegend(color: Colors.red.shade600, label: 'Missed'),
+                ],
+              ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -237,7 +244,7 @@ class _ViewProgressPageState extends State<ViewProgressPage> {
         Text(
           label,
           style: const TextStyle(
-            color: Colors.blueGrey,
+            color: Colors.black54,
             fontSize: 14,
           ),
         ),
@@ -248,105 +255,137 @@ class _ViewProgressPageState extends State<ViewProgressPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text('View Progress'),
-        backgroundColor: Colors.blue.shade800,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
         elevation: 0,
       ),
-      body: Container(
-        color: Colors.white, // Changed to plain white background
-        child: Column(
-          children: [
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-                            child: ToggleButtons(
-                              isSelected: [
-                                _selectedTimeFrame == 0,
-                                _selectedTimeFrame == 1,
-                                _selectedTimeFrame == 2,
-                              ],
-                              onPressed: (index) {
-                                setState(() {
-                                  _selectedTimeFrame = index;
-                                  _isLoading = true;
-                                });
-                                _fetchMedicationLogs();
-                              },
-                              borderRadius: BorderRadius.circular(12),
-                              selectedColor: Colors.white,
-                              fillColor: Colors.blue.shade600,
-                              color: Colors.blueGrey,
-                              constraints: const BoxConstraints(
-                                minHeight: 40.0,
-                                minWidth: 100.0,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Container(
+            color: Colors.blue.shade50,
+          ),
+          Positioned.fill(
+            child: Builder(
+              builder: (context) {
+                try {
+                  return Image.asset(
+                    'assets/images/medical_image.jpg',
+                    fit: BoxFit.cover,
+                    alignment: Alignment.center,
+                    width: MediaQuery.of(context).size.width,
+                    height: MediaQuery.of(context).size.height,
+                    errorBuilder: (context, error, stackTrace) {
+                      print('Asset loading error: $error\n$stackTrace');
+                      return Container(
+                        color: Colors.blue.shade50,
+                        child: Center(child: Text('Failed to load background image')),
+                      );
+                    },
+                  );
+                } catch (e) {
+                  print('Exception loading asset: $e');
+                  return Container(
+                    color: Colors.blue.shade50,
+                    child: Center(child: Text('Exception loading background image')),
+                  );
+                }
+              },
+            ),
+          ),
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withOpacity(0.3),
+            ),
+          ),
+          SafeArea(
+            child: Column(
+              children: [
+                Container(
+                  height: 1,
+                  color: Colors.grey.shade400,
+                  margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                ),
+                Expanded(
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+                                child: ToggleButtons(
+                                  isSelected: [
+                                    _selectedTimeFrame == 0,
+                                    _selectedTimeFrame == 1,
+                                    _selectedTimeFrame == 2,
+                                  ],
+                                  onPressed: (index) {
+                                    setState(() {
+                                      _selectedTimeFrame = index;
+                                      _isLoading = true;
+                                    });
+                                    _fetchMedicationLogs();
+                                  },
+                                  borderRadius: BorderRadius.circular(12),
+                                  selectedColor: Colors.white,
+                                  fillColor: Colors.blue.shade600,
+                                  color: Colors.black54,
+                                  constraints: const BoxConstraints(
+                                    minHeight: 40.0,
+                                    minWidth: 100.0,
+                                  ),
+                                  children: const [
+                                    Text('Last 24 Hours'),
+                                    Text('Last 7 Days'),
+                                    Text('Last 30 Days'),
+                                  ],
+                                ),
                               ),
-                              children: const [
-                                Text('Last 24 Hours'),
-                                Text('Last 7 Days'),
-                                Text('Last 30 Days'),
-                              ],
-                            ),
+                              _buildHistogram(),
+                            ],
                           ),
-                          _buildHistogram(),
-                        ],
-                      ),
+                        ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      final user = await DatabaseHelper.instance.getUserById(widget.userId);
+                      if (user != null) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DashboardPage(user: user),
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Error: User not found')),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueGrey,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 2,
                     ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: () async {
-                  final user = await DatabaseHelper.instance.getUserById(widget.userId);
-                  if (user != null) {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => DashboardPage(user: user),
-                      ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: User not found')),
-                    );
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue.shade600,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 2,
-                ),
-                child: const Text(
-                  'Return to Dashboard',
-                  style: TextStyle(fontSize: 16),
-                ),
-              ),
-            ),
-            Container(
-              color: Colors.white,
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: const Center(
-                child: Text(
-                  'Thriving Health, Vibrant Life Every Day',
-                  style: TextStyle(
-                    fontStyle: FontStyle.italic,
-                    color: Colors.blueGrey,
-                    fontSize: 14,
+                    child: const Text(
+                      'Return to Dashboard',
+                      style: TextStyle(fontSize: 16),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -166,200 +166,201 @@ class _AppointmentTrackingPageState extends State<AppointmentTrackingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text('Track Appointments'),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
         elevation: 0,
       ),
-      body: Column(
+      body: Stack(
+        fit: StackFit.expand,
         children: [
-          // Horizontal line separator
           Container(
-            height: 1,
-            color: Colors.grey.shade400,
-            margin: const EdgeInsets.symmetric(horizontal: 16.0),
+            color: Colors.blue.shade50,
           ),
-          // Main body content
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blue.shade800, Colors.white],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Last Appointment',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 20),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.9),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey),
-                        ),
-                        child: ListTile(
-                          title: Text(
-                            _lastAppointmentDate == null
-                                ? 'Select Date'
-                                : dateFormatter.format(_lastAppointmentDate!),
-                            style: const TextStyle(fontSize: 16, color: Colors.black87),
-                          ),
-                          trailing: Icon(Icons.calendar_today, color: Colors.blue.shade600),
-                          onTap: () => _selectDate(context, true),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 20),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.9),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey),
-                        ),
-                        child: ListTile(
-                          title: Text(
-                            _lastAppointmentTime == null
-                                ? 'Select Time'
-                                : _lastAppointmentTime!.format(context),
-                            style: const TextStyle(fontSize: 16, color: Colors.black87),
-                          ),
-                          trailing: Icon(Icons.access_time, color: Colors.blue.shade600),
-                          onTap: () => _selectTime(context, true),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        'Follow-Up Appointment',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 20),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.9),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey),
-                        ),
-                        child: ListTile(
-                          title: Text(
-                            _followUpDate == null
-                                ? 'Select Date'
-                                : dateFormatter.format(_followUpDate!),
-                            style: const TextStyle(fontSize: 16, color: Colors.black87),
-                          ),
-                          trailing: Icon(Icons.calendar_today, color: Colors.blue.shade600),
-                          onTap: () => _selectDate(context, false),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 20),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.9),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey),
-                        ),
-                        child: ListTile(
-                          title: Text(
-                            _followUpTime == null
-                                ? 'Select Time'
-                                : _followUpTime!.format(context),
-                            style: const TextStyle(fontSize: 16, color: Colors.black87),
-                          ),
-                          trailing: Icon(Icons.access_time, color: Colors.blue.shade600),
-                          onTap: () => _selectTime(context, false),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Center(
-                        child: ElevatedButton(
-                          onPressed: _showConfirmDialog,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.shade600,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            elevation: 2,
-                          ),
-                          child: const Text(
-                            'Save Appointments',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Center(
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            final user = await DatabaseHelper.instance.getUserById(widget.userId);
-                            if (user != null) {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => DashboardPage(user: user),
-                                ),
-                              );
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Error: User not found')),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.shade600,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            elevation: 2,
-                          ),
-                          child: const Text(
-                            'Return to Dashboard',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+          Positioned.fill(
+            child: Builder(
+              builder: (context) {
+                try {
+                  return Image.asset(
+                    'assets/images/medical_image.jpg',
+                    fit: BoxFit.cover,
+                    alignment: Alignment.center,
+                    width: MediaQuery.of(context).size.width,
+                    height: MediaQuery.of(context).size.height,
+                    errorBuilder: (context, error, stackTrace) {
+                      print('Asset loading error: $error\n$stackTrace');
+                      return Container(
+                        color: Colors.blue.shade50,
+                        child: Center(child: Text('Failed to load background image')),
+                      );
+                    },
+                  );
+                } catch (e) {
+                  print('Exception loading asset: $e');
+                  return Container(
+                    color: Colors.blue.shade50,
+                    child: Center(child: Text('Exception loading background image')),
+                  );
+                }
+              },
             ),
           ),
-          Container(
-            color: Colors.white,
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: const Center(
-              child: Text(
-                'Thriving Health, Vibrant Life Every Day',
-                style: TextStyle(
-                  fontStyle: FontStyle.italic,
-                  color: Colors.blueGrey,
-                  fontSize: 14,
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withOpacity(0.3),
+            ),
+          ),
+          SafeArea(
+            child: Column(
+              children: [
+                Container(
+                  height: 1,
+                  color: Colors.grey.shade400,
+                  margin: const EdgeInsets.symmetric(horizontal: 16.0),
                 ),
-              ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Last Appointment',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Card(
+                          color: Colors.white.withOpacity(0.9),
+                          margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          child: ListTile(
+                            title: Text(
+                              _lastAppointmentDate == null
+                                  ? 'Select Date'
+                                  : dateFormatter.format(_lastAppointmentDate!),
+                              style: const TextStyle(fontSize: 16, color: Colors.black87),
+                            ),
+                            trailing: Icon(Icons.calendar_today, color: Colors.blue.shade600),
+                            onTap: () => _selectDate(context, true),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Card(
+                          color: Colors.white.withOpacity(0.9),
+                          margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          child: ListTile(
+                            title: Text(
+                              _lastAppointmentTime == null
+                                  ? 'Select Time'
+                                  : _lastAppointmentTime!.format(context),
+                              style: const TextStyle(fontSize: 16, color: Colors.black87),
+                            ),
+                            trailing: Icon(Icons.access_time, color: Colors.blue.shade600),
+                            onTap: () => _selectTime(context, true),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          'Follow-Up Appointment',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Card(
+                          color: Colors.white.withOpacity(0.9),
+                          margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          child: ListTile(
+                            title: Text(
+                              _followUpDate == null
+                                  ? 'Select Date'
+                                  : dateFormatter.format(_followUpDate!),
+                              style: const TextStyle(fontSize: 16, color: Colors.black87),
+                            ),
+                            trailing: Icon(Icons.calendar_today, color: Colors.blue.shade600),
+                            onTap: () => _selectDate(context, false),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Card(
+                          color: Colors.white.withOpacity(0.9),
+                          margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          child: ListTile(
+                            title: Text(
+                              _followUpTime == null
+                                  ? 'Select Time'
+                                  : _followUpTime!.format(context),
+                              style: const TextStyle(fontSize: 16, color: Colors.black87),
+                            ),
+                            trailing: Icon(Icons.access_time, color: Colors.blue.shade600),
+                            onTap: () => _selectTime(context, false),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Center(
+                          child: ElevatedButton(
+                            onPressed: _showConfirmDialog,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue.shade600,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              elevation: 2,
+                            ),
+                            child: const Text(
+                              'Save Appointments',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Center(
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              final user = await DatabaseHelper.instance.getUserById(widget.userId);
+                              if (user != null) {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => DashboardPage(user: user),
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Error: User not found')),
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blueGrey,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              elevation: 2,
+                            ),
+                            child: const Text(
+                              'Return to Dashboard',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

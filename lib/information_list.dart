@@ -70,7 +70,7 @@ class _InformationListPageState extends State<InformationListPage> {
   }
 
   Future<void> _showDeleteConfirmationDialog(int id, String diseaseName) async {
-    showDialog(
+    final result = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -79,14 +79,13 @@ class _InformationListPageState extends State<InformationListPage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog (Cancel)
+                Navigator.of(context).pop(false); // Close the dialog (Cancel)
               },
               child: Text('Cancel'),
             ),
             TextButton(
               onPressed: () async {
-                Navigator.of(context).pop(); // Close the dialog
-                await _deleteMedicationInfo(id); // Proceed with deletion
+                Navigator.of(context).pop(true); // Close the dialog and confirm deletion
               },
               child: Text(
                 'Yes',
@@ -97,6 +96,9 @@ class _InformationListPageState extends State<InformationListPage> {
         );
       },
     );
+    if (result == true) {
+      await _deleteMedicationInfo(id); // Proceed with deletion
+    }
   }
 
   Future<void> _navigateToDashboard() async {
@@ -139,7 +141,7 @@ class _InformationListPageState extends State<InformationListPage> {
               builder: (context) {
                 try {
                   return Image.asset(
-                    'assets/images/list.jpg',
+                    'assets/images/medical_image.jpg',
                     fit: BoxFit.cover, // Fill entire screen, may crop
                     alignment: Alignment.center,
                     width: MediaQuery.of(context).size.width,
@@ -147,7 +149,7 @@ class _InformationListPageState extends State<InformationListPage> {
                     errorBuilder: (context, error, stackTrace) {
                       print('Asset loading error: $error\n$stackTrace');
                       return Container(
-                        color: Colors.red,
+                        color: Colors.blue.shade50,
                         child: Center(child: Text('Failed to load image')),
                       );
                     },
@@ -155,7 +157,7 @@ class _InformationListPageState extends State<InformationListPage> {
                 } catch (e) {
                   print('Exception loading asset: $e');
                   return Container(
-                    color: Colors.red,
+                    color: Colors.blue.shade50,
                     child: Center(child: Text('Exception loading image')),
                   );
                 }
@@ -195,6 +197,7 @@ class _InformationListPageState extends State<InformationListPage> {
                               backgroundColor: Colors.blue.shade600,
                               foregroundColor: Colors.white,
                               padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                             child: Text('Add Information'),
                           ),
@@ -205,6 +208,7 @@ class _InformationListPageState extends State<InformationListPage> {
                               backgroundColor: Colors.blueGrey,
                               foregroundColor: Colors.white,
                               padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                             child: Text('Return to Dashboard'),
                           ),
@@ -226,6 +230,7 @@ class _InformationListPageState extends State<InformationListPage> {
                                 backgroundColor: Colors.blueGrey,
                                 foregroundColor: Colors.white,
                                 padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
                               child: Text('Return to Dashboard'),
                             ),
@@ -237,6 +242,7 @@ class _InformationListPageState extends State<InformationListPage> {
                       return Card(
                         color: Colors.white.withOpacity(0.9), // Semi-transparent for readability
                         margin: EdgeInsets.symmetric(vertical: 8.0),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         child: ListTile(
                           title: Text(
                             info['disease_name'] ?? 'Unknown Disease',
